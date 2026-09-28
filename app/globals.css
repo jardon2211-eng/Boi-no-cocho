@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  background-color: #f7f7f5;
+  color: #1f2937;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-100 p-5;
+}
+
+.btn-primary {
+  @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50;
+}
+
+.btn-secondary {
+  @apply bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors;
+}
+
+.input-field {
+  @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent;
+}
+
+.label-field {
+  @apply block text-sm font-medium text-gray-600 mb-1;
+}
+
+.badge-ativo {
+  @apply bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full;
+}
+
+.badge-vendido {
+  @apply bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full;
+}
+
+.badge-baixo {
+  @apply bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full;
+}
