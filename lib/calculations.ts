@@ -80,14 +80,17 @@ export function custoMedioPorKgDieta(formulacoes: Formulacao[], loteId: string):
   return custoDietaPorAnimalDia(formulacoes, loteId) / kgTotalPorAnimalDia;
 }
 
-/** Custo real do que foi colocado no cocho num registro (kg líquido = colocado - sobra) */
+/** Custo real do que foi colocado no cocho num trato (ração + volumoso, descontando a sobra se houver) */
 export function custoRegistroCocho(
-  quantidadeKg: number,
+  racaoKg: number,
+  volumosoKg: number,
+  sobrou: boolean,
   sobraKg: number,
   formulacoes: Formulacao[],
   loteId: string
 ): number {
-  const kgLiquido = Math.max(0, quantidadeKg - sobraKg);
+  const totalColocado = racaoKg + volumosoKg;
+  const kgLiquido = Math.max(0, totalColocado - (sobrou ? sobraKg : 0));
   return kgLiquido * custoMedioPorKgDieta(formulacoes, loteId);
 }
 

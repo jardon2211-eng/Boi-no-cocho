@@ -76,15 +76,22 @@ create table if not exists despesas (
 );
 
 -- ---------- RAÇÃO NO COCHO (registro diário do que foi de fato colocado no cocho) ----------
+-- Suporta múltiplos tratos por dia (ex: 1º Trato 07:00, 2º Trato 12:00, 3º Trato 17:00),
+-- com ração (concentrado) e volumoso separados, e controle de sobra por trato.
 create table if not exists cocho_registros (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   lote_id uuid not null references lotes(id) on delete cascade,
   data date not null default current_date,
-  quantidade_kg numeric not null check (quantidade_kg > 0),  -- ração colocada no cocho naquele dia
-  sobra_kg numeric not null default 0,                        -- sobra encontrada no cocho (opcional)
+  trato_numero smallint not null default 1,       -- 1º, 2º, 3º trato do dia...
+  horario time not null default '07:00',
+  racao_kg numeric not null default 0,             -- concentrado colocado nesse trato
+  volumoso_kg numeric not null default 0,          -- volumoso colocado nesse trato
+  sobrou boolean not null default false,           -- sobrou algo no cocho desse trato?
+  sobra_kg numeric not null default 0,             -- quanto sobrou (só relevante se sobrou=true)
   observacao text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (lote_id, data, trato_numero)             -- reenviar o mesmo trato/dia atualiza os valores
 );
 
 -- =========================================================

@@ -70,7 +70,11 @@ export type CochoRegistro = {
   user_id: string;
   lote_id: string;
   data: string;
-  quantidade_kg: number;
+  trato_numero: number;
+  horario: string;
+  racao_kg: number;
+  volumoso_kg: number;
+  sobrou: boolean;
   sobra_kg: number;
   observacao: string | null;
   created_at: string;

@@ -1,14 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
-import { Lote, Formulacao, CochoRegistro } from "@/lib/types";
+import { Lote, Formulacao } from "@/lib/types";
 import { numeroAnimaisAtual, custoMedioPorKgDieta, formatBRL } from "@/lib/calculations";
 import { NovoRegistroCochoForm, ExcluirCochoBotao } from "./CochoClient";
+
+const NOME_TRATO: Record<number, string> = { 1: "1º Trato", 2: "2º Trato", 3: "3º Trato" };
 
 export default async function CochoPage() {
   const supabase = createClient();
   const [{ data: lotes }, { data: formulacoes }, { data: registros }] = await Promise.all([
     supabase.from("lotes").select("*"),
     supabase.from("formulacoes").select("*, produtos(*)"),
-    supabase.from("cocho_registros").select("*, lotes(nome)").order("data", { ascending: false }),
+    supabase.from("cocho_registros").select("*, lotes(nome)").order("data", { ascending: false }).order("trato_numero"),
   ]);
 
   const todosLotes = (lotes ?? []) as Lote[];
@@ -17,22 +19,21 @@ export default async function CochoPage() {
   const lotesAtivos = todosLotes.filter((l) => l.status === "Ativo");
   const loteById = new Map(todosLotes.map((l) => [l.id, l]));
 
-  // resumo por lote: total colocado, total sobra, custo estimado, média diária
+  const kgLiquidoRegistro = (r: any) => Math.max(0, r.racao_kg + r.volumoso_kg - (r.sobrou ? r.sobra_kg : 0));
+
   const resumoPorLote = lotesAtivos.map((lote) => {
     const registrosDoLote = todosRegistros.filter((r) => r.lote_id === lote.id);
-    const totalColocado = registrosDoLote.reduce((s, r) => s + r.quantidade_kg, 0);
-    const totalSobra = registrosDoLote.reduce((s, r) => s + r.sobra_kg, 0);
-    const kgLiquido = totalColocado - totalSobra;
+    const kgLiquido = registrosDoLote.reduce((s, r) => s + kgLiquidoRegistro(r), 0);
     const custoKg = custoMedioPorKgDieta(todasFormulacoes, lote.id);
     const custoTotal = kgLiquido * custoKg;
-    const dias = registrosDoLote.length;
-    const mediaDiariaKg = dias > 0 ? kgLiquido / dias : 0;
+    const diasDistintos = new Set(registrosDoLote.map((r) => r.data)).size;
+    const mediaDiariaKg = diasDistintos > 0 ? kgLiquido / diasDistintos : 0;
     const previstoKgDia = numeroAnimaisAtual(lote) * (
       todasFormulacoes
         .filter((f) => f.lote_id === lote.id && f.status === "Aprovado")
         .reduce((s, f) => s + f.kg_animal_dia, 0)
     );
-    return { lote, totalColocado, totalSobra, kgLiquido, custoTotal, custoKg, dias, mediaDiariaKg, previstoKgDia };
+    return { lote, kgLiquido, custoTotal, mediaDiariaKg, previstoKgDia, diasDistintos };
   });
 
   return (
@@ -41,7 +42,7 @@ export default async function CochoPage() {
         <div>
           <h1 className="text-2xl font-bold text-brand-700">🌾 Ração no Cocho</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Anote diariamente quanto de ração foi de fato colocado no cocho de cada lote — o custo é calculado com base na dieta aprovada.
+            Anote os 3 tratos do dia (ração e volumoso) de cada lote — o custo é calculado com base na dieta aprovada.
           </p>
         </div>
         <NovoRegistroCochoForm lotes={lotesAtivos} />
@@ -51,7 +52,7 @@ export default async function CochoPage() {
         <p className="text-sm text-gray-400 mb-8">Nenhum lote ativo.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {resumoPorLote.map(({ lote, kgLiquido, custoTotal, mediaDiariaKg, previstoKgDia, dias }) => (
+          {resumoPorLote.map(({ lote, kgLiquido, custoTotal, mediaDiariaKg, previstoKgDia, diasDistintos }) => (
             <div key={lote.id} className="card">
               <div className="flex justify-between items-start">
                 <span className="font-bold text-gray-800">{lote.nome}</span>
@@ -75,7 +76,7 @@ export default async function CochoPage() {
                   <p className="font-semibold text-purple-600">{previstoKgDia.toFixed(1)} kg/dia</p>
                 </div>
               </div>
-              {dias > 0 && previstoKgDia > 0 && (
+              {diasDistintos > 0 && previstoKgDia > 0 && (
                 <p className={`text-xs mt-3 ${mediaDiariaKg > previstoKgDia * 1.1 ? "text-amber-600" : mediaDiariaKg < previstoKgDia * 0.9 ? "text-blue-600" : "text-green-600"}`}>
                   {mediaDiariaKg > previstoKgDia * 1.1
                     ? "⚠ Colocando mais que o previsto pela dieta"
@@ -96,30 +97,36 @@ export default async function CochoPage() {
             <tr className="text-left text-gray-400 border-b border-gray-100">
               <th className="py-2 font-medium">Data</th>
               <th className="py-2 font-medium">Lote</th>
-              <th className="py-2 font-medium">Colocado</th>
-              <th className="py-2 font-medium">Sobra</th>
+              <th className="py-2 font-medium">Trato</th>
+              <th className="py-2 font-medium">Horário</th>
+              <th className="py-2 font-medium">Ração</th>
+              <th className="py-2 font-medium">Volumoso</th>
+              <th className="py-2 font-medium">Sobrou?</th>
               <th className="py-2 font-medium">Líquido</th>
               <th className="py-2 font-medium">Custo</th>
-              <th className="py-2 font-medium">Observação</th>
               <th className="py-2 font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
             {todosRegistros.length === 0 ? (
-              <tr><td colSpan={8} className="py-6 text-center text-gray-400">Nenhum registro ainda.</td></tr>
+              <tr><td colSpan={10} className="py-6 text-center text-gray-400">Nenhum registro ainda.</td></tr>
             ) : todosRegistros.map((r) => {
               const lote = loteById.get(r.lote_id);
-              const kgLiquido = r.quantidade_kg - r.sobra_kg;
+              const kgLiquido = kgLiquidoRegistro(r);
               const custo = lote ? kgLiquido * custoMedioPorKgDieta(todasFormulacoes, lote.id) : 0;
               return (
                 <tr key={r.id} className="border-b border-gray-50">
-                  <td className="py-2">{new Date(r.data).toLocaleDateString("pt-BR")}</td>
+                  <td className="py-2">{new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR")}</td>
                   <td className="py-2">{r.lotes?.nome}</td>
-                  <td className="py-2">{r.quantidade_kg} kg</td>
-                  <td className="py-2 text-gray-500">{r.sobra_kg} kg</td>
+                  <td className="py-2">{NOME_TRATO[r.trato_numero] ?? `${r.trato_numero}º Trato`}</td>
+                  <td className="py-2 text-gray-500">{r.horario?.slice(0, 5)}</td>
+                  <td className="py-2">{r.racao_kg} kg</td>
+                  <td className="py-2">{r.volumoso_kg} kg</td>
+                  <td className="py-2">
+                    {r.sobrou ? <span className="badge-baixo">Sim · {r.sobra_kg} kg</span> : <span className="badge-ativo">Não</span>}
+                  </td>
                   <td className="py-2 font-medium">{kgLiquido.toFixed(1)} kg</td>
                   <td className="py-2">{formatBRL(custo)}</td>
-                  <td className="py-2 text-gray-500">{r.observacao || "—"}</td>
                   <td className="py-2"><ExcluirCochoBotao id={r.id} /></td>
                 </tr>
               );
