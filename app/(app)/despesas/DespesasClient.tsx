@@ -53,6 +53,19 @@ export function NovaDespesaForm({ lotes }: { lotes: Lote[] }) {
               <input name="valor" type="number" step="0.01" min={0} required className="input-field" />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label-field">Categoria Detalhada</label>
+              <input name="categoria_detalhe" className="input-field" placeholder="Ex: Medicação, Frete..." />
+            </div>
+            <div>
+              <label className="label-field">Recorrência</label>
+              <select name="recorrencia" className="input-field" defaultValue="Único">
+                <option value="Único">Único</option>
+                <option value="Mensal">Mensal</option>
+              </select>
+            </div>
+          </div>
           <div>
             <label className="label-field">Data</label>
             <input name="data" type="date" required className="input-field" defaultValue={new Date().toISOString().slice(0, 10)} />

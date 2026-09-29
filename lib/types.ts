@@ -23,7 +23,9 @@ export type Produto = {
   user_id: string;
   nome: string;
   categoria: string | null;
-  preco_kg: number;
+  kg_por_saco: number;
+  preco_saco: number;
+  preco_kg: number; // calculado automaticamente (preco_saco / kg_por_saco)
   fornecedor: string | null;
   estoque_minimo_kg: number;
   created_at: string;
@@ -32,10 +34,12 @@ export type Produto = {
 export type Formulacao = {
   id: string;
   user_id: string;
-  lote_id: string;
+  lote_id: string | null; // pode ser null = "Formulação Independente" (sem lote / planejamento de custo)
   produto_id: string;
   data: string;
-  kg_animal_dia: number;
+  percentual: number;      // % desse produto na dieta (soma dos produtos da mesma dieta = 100%)
+  kg_dia_total: number;    // kg totais/animal/dia da dieta (compartilhado entre os produtos da mesma dieta)
+  kg_animal_dia: number;   // calculado automaticamente = percentual/100 * kg_dia_total
   status: "Pendente" | "Aprovado";
   created_at: string;
   produtos?: Produto;
@@ -59,6 +63,8 @@ export type Despesa = {
   user_id: string;
   lote_id: string | null;
   categoria: "Fixa" | "Variável";
+  categoria_detalhe: string | null; // ex: Medicação, Frete, Mão de obra...
+  recorrencia: "Único" | "Mensal";
   descricao: string;
   valor: number;
   data: string;

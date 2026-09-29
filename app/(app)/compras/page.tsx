@@ -84,6 +84,11 @@ export default async function ComprasPage() {
                     <p className="font-semibold text-green-700">+{ganhoPorBoi.toFixed(1)} kg/boi · +{ganhoTotal.toFixed(0)} kg total</p>
                   </div>
                 </div>
+                {lote.status === "Ativo" && (
+                  <a href="/lotes" className="block text-center mt-4 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg py-2">
+                    + Adicionar / Remover Bois do Lote
+                  </a>
+                )}
               </div>
             );
           })}

@@ -18,7 +18,11 @@ export default async function EstoquePage() {
     const entradas = todosMovimentos.filter((m) => m.produto_id === p.id && m.tipo === "Entrada").reduce((s, m) => s + m.quantidade_kg, 0);
     const saidas = todosMovimentos.filter((m) => m.produto_id === p.id && m.tipo === "Saída").reduce((s, m) => s + m.quantidade_kg, 0);
     const saldo = entradas - saidas;
-    return { produto: p, entradas, saidas, saldo, baixo: saldo < p.estoque_minimo_kg };
+    const kgPorSaco = p.kg_por_saco > 0 ? p.kg_por_saco : 1;
+    return {
+      produto: p, entradas, saidas, saldo, baixo: saldo < p.estoque_minimo_kg,
+      entradasSacos: entradas / kgPorSaco, saidasSacos: saidas / kgPorSaco, saldoSacos: saldo / kgPorSaco,
+    };
   });
 
   return (
@@ -39,19 +43,21 @@ export default async function EstoquePage() {
               <th className="py-2 font-medium">Produto</th>
               <th className="py-2 font-medium">Entradas</th>
               <th className="py-2 font-medium">Saídas</th>
-              <th className="py-2 font-medium">Saldo (kg)</th>
+              <th className="py-2 font-medium">Saldo (Sacos)</th>
+              <th className="py-2 font-medium">Saldo (Kg)</th>
               <th className="py-2 font-medium">Status</th>
             </tr>
           </thead>
           <tbody>
             {saldoPorProduto.length === 0 ? (
-              <tr><td colSpan={5} className="py-6 text-center text-gray-400">Cadastre produtos na aba Formulação.</td></tr>
-            ) : saldoPorProduto.map(({ produto, entradas, saidas, saldo, baixo }) => (
+              <tr><td colSpan={6} className="py-6 text-center text-gray-400">Cadastre produtos na aba Formulação.</td></tr>
+            ) : saldoPorProduto.map(({ produto, entradasSacos, saidasSacos, saldo, saldoSacos, baixo }) => (
               <tr key={produto.id} className="border-b border-gray-50">
                 <td className="py-2 font-medium">{produto.nome}</td>
-                <td className="py-2 text-green-600">{entradas.toLocaleString("pt-BR")} kg</td>
-                <td className="py-2 text-red-500">{saidas.toLocaleString("pt-BR")} kg</td>
-                <td className="py-2 font-semibold">{saldo.toLocaleString("pt-BR")} kg</td>
+                <td className="py-2 text-green-600">{entradasSacos.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} sacos</td>
+                <td className="py-2 text-red-500">{saidasSacos.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} sacos</td>
+                <td className="py-2 font-semibold">{saldoSacos.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} sacos</td>
+                <td className="py-2 text-gray-500">{saldo.toLocaleString("pt-BR")} kg</td>
                 <td className="py-2">
                   {baixo ? <span className="badge-baixo">⚠ BAIXO</span> : <span className="badge-ativo">OK</span>}
                 </td>

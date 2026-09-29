@@ -1,24 +1,30 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { criarProduto, criarFormulacao, aprovarFormulacao, excluirFormulacao, excluirProduto } from "./actions";
+import { useState } from "react";
+import {
+  criarProduto, excluirProduto, criarDietaCompleta, aprovarDieta, excluirDieta, ItemReceita,
+} from "./actions";
 import { Produto, Lote } from "@/lib/types";
+import { formatBRL } from "@/lib/calculations";
 
 export function NovoProdutoForm() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [kgSaco, setKgSaco] = useState(1);
+  const [precoSaco, setPrecoSaco] = useState(0);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     try {
       await criarProduto(formData);
-      formRef.current?.reset();
       setOpen(false);
+      setKgSaco(1); setPrecoSaco(0);
     } finally {
       setLoading(false);
     }
   }
+
+  const custoKgPreview = kgSaco > 0 ? precoSaco / kgSaco : 0;
 
   if (!open) {
     return <button onClick={() => setOpen(true)} className="btn-primary">+ Novo Produto</button>;
@@ -28,7 +34,7 @@ export function NovoProdutoForm() {
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
         <h3 className="font-bold text-gray-800 mb-3">Novo Produto</h3>
-        <form ref={formRef} action={handleSubmit} className="space-y-3">
+        <form action={handleSubmit} className="space-y-3">
           <div>
             <label className="label-field">Nome</label>
             <input name="nome" required className="input-field" placeholder="Ex: Milho" />
@@ -39,13 +45,23 @@ export function NovoProdutoForm() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label-field">Preço/kg (R$)</label>
-              <input name="preco_kg" type="number" step="0.01" required className="input-field" />
+              <label className="label-field">Kg por Saco</label>
+              <input name="kg_por_saco" type="number" step="0.1" min={0.1} required className="input-field"
+                value={kgSaco} onChange={(e) => setKgSaco(parseFloat(e.target.value) || 0)} placeholder="Ex: 40" />
             </div>
             <div>
-              <label className="label-field">Estoque Mínimo (kg)</label>
-              <input name="estoque_minimo_kg" type="number" step="1" className="input-field" defaultValue={0} />
+              <label className="label-field">Valor/Saco (R$)</label>
+              <input name="preco_saco" type="number" step="0.01" min={0} required className="input-field"
+                value={precoSaco} onChange={(e) => setPrecoSaco(parseFloat(e.target.value) || 0)} placeholder="Ex: 65" />
             </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            Custo por kg calculado: <strong>{formatBRL(custoKgPreview)}</strong>
+            {" "}— pra comprar por kg direto (sem saco), deixe "Kg por Saco" = 1.
+          </p>
+          <div>
+            <label className="label-field">Estoque Mínimo (kg)</label>
+            <input name="estoque_minimo_kg" type="number" step="1" className="input-field" defaultValue={0} />
           </div>
           <div>
             <label className="label-field">Fornecedor</label>
@@ -67,9 +83,9 @@ export function ProdutosTable({ produtos }: { produtos: Produto[] }) {
       <thead>
         <tr className="text-left text-gray-400 border-b border-gray-100">
           <th className="py-2 font-medium">Produto</th>
-          <th className="py-2 font-medium">Categoria</th>
-          <th className="py-2 font-medium">Preço/kg</th>
-          <th className="py-2 font-medium">Estoque Mín.</th>
+          <th className="py-2 font-medium">Kg/Saco</th>
+          <th className="py-2 font-medium">Valor/Saco</th>
+          <th className="py-2 font-medium">Custo/Kg</th>
           <th className="py-2 font-medium">Ações</th>
         </tr>
       </thead>
@@ -79,9 +95,9 @@ export function ProdutosTable({ produtos }: { produtos: Produto[] }) {
         ) : produtos.map((p) => (
           <tr key={p.id} className="border-b border-gray-50">
             <td className="py-2 font-medium">{p.nome}</td>
-            <td className="py-2 text-gray-500">{p.categoria || "—"}</td>
-            <td className="py-2">R$ {p.preco_kg.toFixed(2)}</td>
-            <td className="py-2 text-gray-500">{p.estoque_minimo_kg} kg</td>
+            <td className="py-2 text-gray-500">{p.kg_por_saco} kg</td>
+            <td className="py-2 text-gray-500">{formatBRL(p.preco_saco)}</td>
+            <td className="py-2 font-semibold text-green-700">{formatBRL(p.preco_kg)}</td>
             <td className="py-2">
               <form action={excluirProduto.bind(null, p.id)}>
                 <button className="text-red-500 hover:underline text-xs">excluir</button>
@@ -94,63 +110,131 @@ export function ProdutosTable({ produtos }: { produtos: Produto[] }) {
   );
 }
 
-export function NovaFormulacaoForm({ lotes, produtos }: { lotes: Lote[]; produtos: Produto[] }) {
-  const formRef = useRef<HTMLFormElement>(null);
+export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Produto[] }) {
+  const [loteId, setLoteId] = useState<string>("__independente__");
+  const [data, setData] = useState(new Date().toISOString().slice(0, 10));
+  const [kgDiaTotal, setKgDiaTotal] = useState(0);
+  const [itens, setItens] = useState<ItemReceita[]>([{ produto_id: produtos[0]?.id ?? "", percentual: 0 }]);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  const totalPct = itens.reduce((s, i) => s + (i.percentual || 0), 0);
+  const custoPorKgRacao = itens.reduce((s, i) => {
+    const p = produtos.find((x) => x.id === i.produto_id);
+    return s + (p ? (i.percentual / 100) * p.preco_kg : 0);
+  }, 0);
+  const custoAnimalDia = custoPorKgRacao * kgDiaTotal;
+
+  function atualizarItem(idx: number, campo: keyof ItemReceita, valor: string | number) {
+    setItens((prev) => prev.map((it, i) => (i === idx ? { ...it, [campo]: valor } : it)));
+  }
+  function adicionarItem() {
+    setItens((prev) => [...prev, { produto_id: produtos[0]?.id ?? "", percentual: 0 }]);
+  }
+  function removerItem(idx: number) {
+    setItens((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  async function handleSubmit() {
     setLoading(true);
     try {
-      await criarFormulacao(formData);
-      formRef.current?.reset();
+      const loteReal = loteId === "__independente__" ? null : loteId;
+      await criarDietaCompleta(loteReal, data, kgDiaTotal, itens);
+      setItens([{ produto_id: produtos[0]?.id ?? "", percentual: 0 }]);
+      setKgDiaTotal(0);
     } finally {
       setLoading(false);
     }
   }
 
-  if (lotes.length === 0 || produtos.length === 0) {
-    return (
-      <p className="text-sm text-gray-400">
-        Cadastre ao menos um produto e um lote (em Compras) para montar uma dieta.
-      </p>
-    );
+  if (produtos.length === 0) {
+    return <p className="text-sm text-gray-400">Cadastre ao menos um produto pra montar uma dieta.</p>;
   }
 
   return (
-    <form ref={formRef} action={handleSubmit} className="grid grid-cols-2 md:grid-cols-5 gap-2 items-end">
-      <div>
-        <label className="label-field">Lote</label>
-        <select name="lote_id" required className="input-field">
-          {lotes.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-        </select>
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <div>
+          <label className="label-field">Lote</label>
+          <select value={loteId} onChange={(e) => setLoteId(e.target.value)} className="input-field">
+            <option value="__independente__">Sem Lote (Independente)</option>
+            {lotes.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="label-field">Data</label>
+          <input type="date" value={data} onChange={(e) => setData(e.target.value)} className="input-field" />
+        </div>
+        <div>
+          <label className="label-field">Kg/Dia Total (por animal)</label>
+          <input type="number" step="0.01" min={0} value={kgDiaTotal || ""}
+            onChange={(e) => setKgDiaTotal(parseFloat(e.target.value) || 0)} className="input-field" placeholder="Ex: 8" />
+        </div>
       </div>
-      <div>
-        <label className="label-field">Produto</label>
-        <select name="produto_id" required className="input-field">
-          {produtos.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
-        </select>
-      </div>
-      <div>
-        <label className="label-field">Kg/Animal/Dia</label>
-        <input name="kg_animal_dia" type="number" step="0.01" min={0} required className="input-field" />
-      </div>
-      <div>
-        <label className="label-field">Data</label>
-        <input name="data" type="date" required className="input-field" defaultValue={new Date().toISOString().slice(0, 10)} />
-      </div>
-      <button type="submit" disabled={loading} className="btn-primary h-[38px]">
-        {loading ? "Salvando..." : "+ Adicionar"}
+
+      <table className="w-full text-sm mb-2">
+        <thead>
+          <tr className="text-left text-gray-400 border-b border-gray-100">
+            <th className="py-2 font-medium">Produto</th>
+            <th className="py-2 font-medium">% na Dieta</th>
+            <th className="py-2 font-medium">Kg/Dia</th>
+            <th className="py-2 font-medium">Custo/Dia</th>
+            <th className="py-2 font-medium"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {itens.map((item, idx) => {
+            const p = produtos.find((x) => x.id === item.produto_id);
+            const kgDia = (item.percentual / 100) * kgDiaTotal;
+            const custoDia = kgDia * (p?.preco_kg ?? 0);
+            return (
+              <tr key={idx} className="border-b border-gray-50">
+                <td className="py-2">
+                  <select value={item.produto_id} onChange={(e) => atualizarItem(idx, "produto_id", e.target.value)} className="input-field">
+                    {produtos.map((prod) => <option key={prod.id} value={prod.id}>{prod.nome}</option>)}
+                  </select>
+                </td>
+                <td className="py-2">
+                  <input type="number" step="0.1" min={0} max={100} value={item.percentual || ""}
+                    onChange={(e) => atualizarItem(idx, "percentual", parseFloat(e.target.value) || 0)}
+                    className="input-field w-24" placeholder="%" />
+                </td>
+                <td className="py-2 text-gray-500">{kgDia.toFixed(2)} kg</td>
+                <td className="py-2 text-gray-500">{formatBRL(custoDia)}</td>
+                <td className="py-2">
+                  <button type="button" onClick={() => removerItem(idx)} className="text-red-500 text-xs hover:underline">remover</button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <button type="button" onClick={adicionarItem} className="text-sm font-semibold text-brand-600 hover:underline mb-4">
+        + Adicionar ingrediente
       </button>
-    </form>
+
+      <div className={`rounded-lg p-3 mb-4 text-sm flex justify-between items-center ${Math.round(totalPct) === 100 ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
+        <span>Total da dieta: <strong>{totalPct.toFixed(1)}%</strong> {Math.round(totalPct) !== 100 && "(precisa somar 100%)"}</span>
+        <span>Custo/kg de ração: <strong>{formatBRL(custoPorKgRacao)}</strong> · Custo/animal/dia: <strong>{formatBRL(custoAnimalDia)}</strong></span>
+      </div>
+
+      <button
+        type="button"
+        disabled={loading || Math.round(totalPct) !== 100 || kgDiaTotal <= 0}
+        onClick={handleSubmit}
+        className="btn-primary"
+      >
+        {loading ? "Salvando..." : "Salvar Dieta"}
+      </button>
+    </div>
   );
 }
 
-export function AprovarBotao({ id }: { id: string }) {
+export function AprovarDietaBotao({ loteId, data }: { loteId: string | null; data: string }) {
   const [loading, setLoading] = useState(false);
   return (
     <button
       disabled={loading}
-      onClick={async () => { setLoading(true); await aprovarFormulacao(id); setLoading(false); }}
+      onClick={async () => { setLoading(true); await aprovarDieta(loteId, data); setLoading(false); }}
       className="text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 px-2 py-1 rounded"
     >
       ✓ Aprovar
@@ -158,9 +242,9 @@ export function AprovarBotao({ id }: { id: string }) {
   );
 }
 
-export function ExcluirFormulacaoBotao({ id }: { id: string }) {
+export function ExcluirDietaBotao({ loteId, data }: { loteId: string | null; data: string }) {
   return (
-    <form action={excluirFormulacao.bind(null, id)}>
+    <form action={excluirDieta.bind(null, loteId, data)}>
       <button className="text-red-500 hover:underline text-xs">excluir</button>
     </form>
   );

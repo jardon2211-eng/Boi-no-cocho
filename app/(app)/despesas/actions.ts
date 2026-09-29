@@ -14,6 +14,8 @@ export async function criarDespesa(formData: FormData) {
     user_id: user.id,
     lote_id: loteId || null,
     categoria: String(formData.get("categoria")),
+    categoria_detalhe: String(formData.get("categoria_detalhe") || ""),
+    recorrencia: String(formData.get("recorrencia") || "Único"),
     descricao: String(formData.get("descricao")),
     valor: Number(formData.get("valor")),
     data: String(formData.get("data")),

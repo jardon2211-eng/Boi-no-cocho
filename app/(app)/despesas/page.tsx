@@ -90,13 +90,15 @@ export default async function DespesasPage() {
               <th className="py-2 font-medium">Descrição</th>
               <th className="py-2 font-medium">Lote</th>
               <th className="py-2 font-medium">Categoria</th>
+              <th className="py-2 font-medium">Detalhe</th>
+              <th className="py-2 font-medium">Recorrência</th>
               <th className="py-2 font-medium">Valor</th>
               <th className="py-2 font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
             {todasDespesas.length === 0 ? (
-              <tr><td colSpan={6} className="py-6 text-center text-gray-400">Nenhuma despesa registrada.</td></tr>
+              <tr><td colSpan={8} className="py-6 text-center text-gray-400">Nenhuma despesa registrada.</td></tr>
             ) : todasDespesas.map((d) => (
               <tr key={d.id} className="border-b border-gray-50">
                 <td className="py-2">{new Date(d.data).toLocaleDateString("pt-BR")}</td>
@@ -105,6 +107,8 @@ export default async function DespesasPage() {
                 <td className="py-2">
                   <span className={d.categoria === "Fixa" ? "badge-vendido" : "badge-baixo"}>{d.categoria.toUpperCase()}</span>
                 </td>
+                <td className="py-2 text-gray-500">{d.categoria_detalhe || "—"}</td>
+                <td className="py-2 text-gray-500">{d.recorrencia}</td>
                 <td className="py-2 font-semibold">{formatBRL(d.valor)}</td>
                 <td className="py-2"><ExcluirDespesaBotao id={d.id} /></td>
               </tr>

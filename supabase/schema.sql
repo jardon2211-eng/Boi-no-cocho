@@ -27,25 +27,38 @@ create table if not exists lotes (
 );
 
 -- ---------- PRODUTOS (ingredientes da ração) ----------
+-- Cadastrados por saco (como se compra de verdade); o custo por kg é calculado sozinho.
+-- Pra comprar direto por kg (sem saco), basta deixar kg_por_saco = 1.
 create table if not exists produtos (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   nome text not null,
   categoria text,
-  preco_kg numeric not null default 0,
+  kg_por_saco numeric not null default 1,
+  preco_saco numeric not null default 0,
+  preco_kg numeric generated always as (
+    case when kg_por_saco > 0 then round(preco_saco / kg_por_saco, 4) else 0 end
+  ) stored,
   fornecedor text,
   estoque_minimo_kg numeric not null default 0,
   created_at timestamptz not null default now()
 );
 
--- ---------- FORMULAÇÕES (dieta de cada lote ao longo do tempo) ----------
+-- ---------- FORMULAÇÕES (dieta de cada lote, por % de cada ingrediente) ----------
+-- Cada linha é um ingrediente de uma "dieta" (mesmo lote_id + mesma data = mesma dieta).
+-- percentual de todas as linhas da mesma dieta deve somar 100%.
+-- lote_id pode ficar em branco: é a "Formulação Independente" (simula custo antes de comprar o gado).
 create table if not exists formulacoes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
-  lote_id uuid not null references lotes(id) on delete cascade,
+  lote_id uuid references lotes(id) on delete cascade,
   produto_id uuid not null references produtos(id) on delete cascade,
   data date not null default current_date,
-  kg_animal_dia numeric not null check (kg_animal_dia >= 0),
+  percentual numeric not null default 0,
+  kg_dia_total numeric not null default 0,
+  kg_animal_dia numeric generated always as (
+    coalesce(percentual, 0) / 100.0 * coalesce(kg_dia_total, 0)
+  ) stored,
   status text not null default 'Pendente' check (status in ('Pendente','Aprovado')),
   created_at timestamptz not null default now()
 );
@@ -69,6 +82,8 @@ create table if not exists despesas (
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   lote_id uuid references lotes(id) on delete set null,
   categoria text not null default 'Variável' check (categoria in ('Fixa','Variável')),
+  categoria_detalhe text,
+  recorrencia text not null default 'Único' check (recorrencia in ('Único','Mensal')),
   descricao text not null,
   valor numeric not null check (valor >= 0),
   data date not null default current_date,

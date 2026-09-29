@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { Produto, Lote, Formulacao } from "@/lib/types";
+import { Produto, Lote } from "@/lib/types";
+import { formatBRL } from "@/lib/calculations";
 import {
-  NovoProdutoForm, ProdutosTable, NovaFormulacaoForm, AprovarBotao, ExcluirFormulacaoBotao,
+  NovoProdutoForm, ProdutosTable, NovaDietaForm, AprovarDietaBotao, ExcluirDietaBotao,
 } from "./FormulacaoClient";
 
 export default async function FormulacaoPage() {
@@ -16,10 +17,26 @@ export default async function FormulacaoPage() {
   const lotesAtivos = (lotes ?? []) as Lote[];
   const todasFormulacoes = (formulacoes ?? []) as any[];
 
+  // agrupa as linhas (uma por ingrediente) em "dietas" — mesma lote_id + mesma data
+  const grupos = new Map<string, { lote_id: string | null; loteNome: string; data: string; kg_dia_total: number; status: string; itens: any[] }>();
+  for (const f of todasFormulacoes) {
+    const chave = `${f.lote_id ?? "sem-lote"}__${f.data}`;
+    if (!grupos.has(chave)) {
+      grupos.set(chave, {
+        lote_id: f.lote_id, loteNome: f.lotes?.nome ?? "Sem Lote (Independente)",
+        data: f.data, kg_dia_total: f.kg_dia_total, status: f.status, itens: [],
+      });
+    }
+    const g = grupos.get(chave)!;
+    g.itens.push(f);
+    if (f.status !== "Aprovado") g.status = "Pendente"; // se algum item não aprovado, dieta toda fica pendente
+  }
+  const dietas = Array.from(grupos.values());
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-brand-700">🧪 Formulação de Ração</h1>
-      <p className="text-gray-500 text-sm mt-1 mb-6">Cadastre os produtos e monte a dieta de cada lote.</p>
+      <p className="text-gray-500 text-sm mt-1 mb-6">Cadastre os produtos por saco e monte a dieta por % de cada ingrediente.</p>
 
       <div className="card mb-6">
         <div className="flex justify-between items-center mb-3">
@@ -30,49 +47,66 @@ export default async function FormulacaoPage() {
       </div>
 
       <div className="card mb-6">
-        <h2 className="font-bold text-gray-700 mb-3">Nova Entrada de Dieta</h2>
-        <NovaFormulacaoForm lotes={lotesAtivos} produtos={todosProdutos} />
+        <h2 className="font-bold text-gray-700 mb-3">Nova Dieta</h2>
+        <NovaDietaForm lotes={lotesAtivos} produtos={todosProdutos} />
       </div>
 
       <div className="card">
-        <h2 className="font-bold text-gray-700 mb-3">Dietas por Lote</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-400 border-b border-gray-100">
-              <th className="py-2 font-medium">Data</th>
-              <th className="py-2 font-medium">Lote</th>
-              <th className="py-2 font-medium">Produto</th>
-              <th className="py-2 font-medium">Kg/Animal/Dia</th>
-              <th className="py-2 font-medium">Custo/Animal/Dia</th>
-              <th className="py-2 font-medium">Status</th>
-              <th className="py-2 font-medium">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {todasFormulacoes.length === 0 ? (
-              <tr><td colSpan={7} className="py-6 text-center text-gray-400">Nenhuma dieta cadastrada ainda.</td></tr>
-            ) : todasFormulacoes.map((f) => (
-              <tr key={f.id} className="border-b border-gray-50">
-                <td className="py-2">{new Date(f.data).toLocaleDateString("pt-BR")}</td>
-                <td className="py-2">{f.lotes?.nome}</td>
-                <td className="py-2">{f.produtos?.nome}</td>
-                <td className="py-2">{f.kg_animal_dia}</td>
-                <td className="py-2">R$ {(f.kg_animal_dia * (f.produtos?.preco_kg ?? 0)).toFixed(2)}</td>
-                <td className="py-2">
-                  {f.status === "Aprovado" ? (
-                    <span className="badge-ativo">APROVADO</span>
-                  ) : (
-                    <span className="badge-baixo">PENDENTE</span>
-                  )}
-                </td>
-                <td className="py-2 flex gap-2 items-center">
-                  {f.status !== "Aprovado" && <AprovarBotao id={f.id} />}
-                  <ExcluirFormulacaoBotao id={f.id} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h2 className="font-bold text-gray-700 mb-3">Dietas Cadastradas</h2>
+        {dietas.length === 0 ? (
+          <p className="text-sm text-gray-400 py-6 text-center">Nenhuma dieta cadastrada ainda.</p>
+        ) : (
+          <div className="space-y-4">
+            {dietas.map((d, idx) => {
+              const custoKg = d.itens.reduce((s, i) => s + (i.percentual / 100) * (i.produtos?.preco_kg ?? 0), 0);
+              const custoDia = custoKg * d.kg_dia_total;
+              return (
+                <div key={idx} className="border border-gray-100 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="font-bold text-gray-800">{d.loteNome}</span>
+                      <span className="text-gray-400 text-xs ml-2">{new Date(d.data + "T00:00:00").toLocaleDateString("pt-BR")}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {d.status === "Aprovado" ? (
+                        <span className="badge-ativo">APROVADO</span>
+                      ) : (
+                        <>
+                          <span className="badge-baixo">PENDENTE</span>
+                          <AprovarDietaBotao loteId={d.lote_id} data={d.data} />
+                        </>
+                      )}
+                      <ExcluirDietaBotao loteId={d.lote_id} data={d.data} />
+                    </div>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-400">
+                        <th className="py-1 font-medium">Produto</th>
+                        <th className="py-1 font-medium">%</th>
+                        <th className="py-1 font-medium">Kg/Dia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {d.itens.map((i: any) => (
+                        <tr key={i.id}>
+                          <td className="py-1">{i.produtos?.nome}</td>
+                          <td className="py-1">{i.percentual}%</td>
+                          <td className="py-1">{i.kg_animal_dia?.toFixed?.(2) ?? ((i.percentual/100)*d.kg_dia_total).toFixed(2)} kg</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex justify-between text-sm mt-3 pt-2 border-t border-gray-50 text-gray-600">
+                    <span>Kg/dia total: <strong>{d.kg_dia_total} kg</strong></span>
+                    <span>Custo/kg de ração: <strong>{formatBRL(custoKg)}</strong></span>
+                    <span>Custo/animal/dia: <strong className="text-green-700">{formatBRL(custoDia)}</strong></span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
