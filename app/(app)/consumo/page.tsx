@@ -20,6 +20,7 @@ export default async function ConsumoPage() {
   const historico: { data: string; lote: string; produto: string; kg: number }[] = [];
 
   for (const f of todasFormulacoes) {
+    if (!f.lote_id) continue; // formulação "Independente" (sem lote) não entra no consumo por lote
     const lote = loteById.get(f.lote_id);
     if (!lote) continue;
     const animais = numeroAnimaisAtual(lote);
