@@ -45,6 +45,8 @@ export type Formulacao = {
   produtos?: Produto;
 };
 
+export type ItemReceita = { produto_id: string; percentual: number };
+
 export type EstoqueMovimento = {
   id: string;
   user_id: string;

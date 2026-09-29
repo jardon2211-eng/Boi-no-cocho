@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import type { ItemReceita } from "@/lib/types";
 
 export async function criarProduto(formData: FormData) {
   const supabase = createClient();
@@ -53,8 +54,6 @@ export async function criarFormulacao(formData: FormData) {
   revalidatePath("/lotes");
 }
 
-export type ItemReceita = { produto_id: string; percentual: number };
-
 /** Cria de uma vez todos os ingredientes de uma dieta (mesma data/lote/kg_dia_total, % de cada produto). */
 export async function criarDietaCompleta(loteId: string | null, data: string, kgDiaTotal: number, itens: ItemReceita[]) {
   const supabase = createClient();
@@ -95,9 +94,8 @@ export async function aprovarFormulacao(id: string) {
 /** Aprova de uma vez todos os ingredientes de uma dieta (mesmo lote + mesma data). */
 export async function aprovarDieta(loteId: string | null, data: string) {
   const supabase = createClient();
-  let query = supabase.from("formulacoes").update({ status: "Aprovado" }).eq("data", data);
-  query = loteId ? query.eq("lote_id", loteId) : query.is("lote_id", null);
-  const { error } = await query;
+  const base = supabase.from("formulacoes").update({ status: "Aprovado" }).eq("data", data);
+  const { error } = loteId ? await base.eq("lote_id", loteId) : await base.is("lote_id", null);
   if (error) throw new Error(error.message);
   revalidatePath("/formulacao");
   revalidatePath("/consumo");
@@ -107,9 +105,8 @@ export async function aprovarDieta(loteId: string | null, data: string) {
 
 export async function excluirDieta(loteId: string | null, data: string) {
   const supabase = createClient();
-  let query = supabase.from("formulacoes").delete().eq("data", data);
-  query = loteId ? query.eq("lote_id", loteId) : query.is("lote_id", null);
-  const { error } = await query;
+  const base = supabase.from("formulacoes").delete().eq("data", data);
+  const { error } = loteId ? await base.eq("lote_id", loteId) : await base.is("lote_id", null);
   if (error) throw new Error(error.message);
   revalidatePath("/formulacao");
   revalidatePath("/consumo");

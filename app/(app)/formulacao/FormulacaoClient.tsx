@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import {
-  criarProduto, excluirProduto, criarDietaCompleta, aprovarDieta, excluirDieta, ItemReceita,
+  criarProduto, excluirProduto, criarDietaCompleta, aprovarDieta, excluirDieta,
 } from "./actions";
-import { Produto, Lote } from "@/lib/types";
+import { Produto, Lote, ItemReceita } from "@/lib/types";
 import { formatBRL } from "@/lib/calculations";
 
 export function NovoProdutoForm() {
@@ -124,7 +124,7 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
   }, 0);
   const custoAnimalDia = custoPorKgRacao * kgDiaTotal;
 
-  function atualizarItem(idx: number, campo: keyof ItemReceita, valor: string | number) {
+  function atualizarItem<K extends keyof ItemReceita>(idx: number, campo: K, valor: ItemReceita[K]) {
     setItens((prev) => prev.map((it, i) => (i === idx ? { ...it, [campo]: valor } : it)));
   }
   function adicionarItem() {
