@@ -58,8 +58,9 @@ export default async function FormulacaoPage() {
         ) : (
           <div className="space-y-4">
             {dietas.map((d, idx) => {
-              const custoKg = d.itens.reduce((s, i) => s + (i.percentual / 100) * (i.produtos?.preco_kg ?? 0), 0);
-              const custoDia = custoKg * d.kg_dia_total;
+              const num = (v: any) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+              const custoKg = d.itens.reduce((s, i) => s + (num(i.percentual) / 100) * num(i.produtos?.preco_kg), 0);
+              const custoDia = custoKg * num(d.kg_dia_total);
               return (
                 <div key={idx} className="border border-gray-100 rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">

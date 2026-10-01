@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   criarProduto, excluirProduto, criarDietaCompleta, aprovarDieta, excluirDieta,
 } from "./actions";
 import { Produto, Lote, ItemReceita } from "@/lib/types";
 import { formatBRL } from "@/lib/calculations";
+
+/** Converte com segurança qualquer valor vindo do banco (às vezes chega como texto) pra número. */
+function num(v: unknown): number {
+  const n = typeof v === "string" ? parseFloat(v) : (v as number);
+  return Number.isFinite(n) ? n : 0;
+}
 
 export function NovoProdutoForm() {
   const [open, setOpen] = useState(false);
@@ -110,36 +116,42 @@ export function ProdutosTable({ produtos }: { produtos: Produto[] }) {
   );
 }
 
+type LinhaReceita = ItemReceita & { _key: number };
+
 export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Produto[] }) {
+  const proximoKey = useRef(1);
+  const novaLinha = (): LinhaReceita => ({ _key: proximoKey.current++, produto_id: produtos[0]?.id ?? "", percentual: 0 });
+
   const [loteId, setLoteId] = useState<string>("__independente__");
   const [data, setData] = useState(new Date().toISOString().slice(0, 10));
   const [kgDiaTotal, setKgDiaTotal] = useState(0);
-  const [itens, setItens] = useState<ItemReceita[]>([{ produto_id: produtos[0]?.id ?? "", percentual: 0 }]);
+  const [itens, setItens] = useState<LinhaReceita[]>(() => [novaLinha()]);
   const [loading, setLoading] = useState(false);
 
-  const totalPct = itens.reduce((s, i) => s + (i.percentual || 0), 0);
+  const totalPct = itens.reduce((s, i) => s + num(i.percentual), 0);
   const custoPorKgRacao = itens.reduce((s, i) => {
     const p = produtos.find((x) => x.id === i.produto_id);
-    return s + (p ? (i.percentual / 100) * p.preco_kg : 0);
+    return s + (p ? (num(i.percentual) / 100) * num(p.preco_kg) : 0);
   }, 0);
-  const custoAnimalDia = custoPorKgRacao * kgDiaTotal;
+  const custoAnimalDia = custoPorKgRacao * num(kgDiaTotal);
 
-  function atualizarItem<K extends keyof ItemReceita>(idx: number, campo: K, valor: ItemReceita[K]) {
-    setItens((prev) => prev.map((it, i) => (i === idx ? { ...it, [campo]: valor } : it)));
+  function atualizarItem<K extends keyof ItemReceita>(key: number, campo: K, valor: ItemReceita[K]) {
+    setItens((prev) => prev.map((it) => (it._key === key ? { ...it, [campo]: valor } : it)));
   }
   function adicionarItem() {
-    setItens((prev) => [...prev, { produto_id: produtos[0]?.id ?? "", percentual: 0 }]);
+    setItens((prev) => [...prev, novaLinha()]);
   }
-  function removerItem(idx: number) {
-    setItens((prev) => prev.filter((_, i) => i !== idx));
+  function removerItem(key: number) {
+    setItens((prev) => prev.filter((it) => it._key !== key));
   }
 
   async function handleSubmit() {
     setLoading(true);
     try {
       const loteReal = loteId === "__independente__" ? null : loteId;
-      await criarDietaCompleta(loteReal, data, kgDiaTotal, itens);
-      setItens([{ produto_id: produtos[0]?.id ?? "", percentual: 0 }]);
+      const payload: ItemReceita[] = itens.map(({ produto_id, percentual }) => ({ produto_id, percentual: num(percentual) }));
+      await criarDietaCompleta(loteReal, data, num(kgDiaTotal), payload);
+      setItens([novaLinha()]);
       setKgDiaTotal(0);
     } finally {
       setLoading(false);
@@ -182,26 +194,26 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
           </tr>
         </thead>
         <tbody>
-          {itens.map((item, idx) => {
+          {itens.map((item) => {
             const p = produtos.find((x) => x.id === item.produto_id);
-            const kgDia = (item.percentual / 100) * kgDiaTotal;
-            const custoDia = kgDia * (p?.preco_kg ?? 0);
+            const kgDia = (num(item.percentual) / 100) * num(kgDiaTotal);
+            const custoDia = kgDia * num(p?.preco_kg);
             return (
-              <tr key={idx} className="border-b border-gray-50">
+              <tr key={item._key} className="border-b border-gray-50">
                 <td className="py-2">
-                  <select value={item.produto_id} onChange={(e) => atualizarItem(idx, "produto_id", e.target.value)} className="input-field">
+                  <select value={item.produto_id} onChange={(e) => atualizarItem(item._key, "produto_id", e.target.value)} className="input-field">
                     {produtos.map((prod) => <option key={prod.id} value={prod.id}>{prod.nome}</option>)}
                   </select>
                 </td>
                 <td className="py-2">
                   <input type="number" step="0.1" min={0} max={100} value={item.percentual || ""}
-                    onChange={(e) => atualizarItem(idx, "percentual", parseFloat(e.target.value) || 0)}
+                    onChange={(e) => atualizarItem(item._key, "percentual", parseFloat(e.target.value) || 0)}
                     className="input-field w-24" placeholder="%" />
                 </td>
                 <td className="py-2 text-gray-500">{kgDia.toFixed(2)} kg</td>
                 <td className="py-2 text-gray-500">{formatBRL(custoDia)}</td>
                 <td className="py-2">
-                  <button type="button" onClick={() => removerItem(idx)} className="text-red-500 text-xs hover:underline">remover</button>
+                  <button type="button" onClick={() => removerItem(item._key)} className="text-red-500 text-xs hover:underline">remover</button>
                 </td>
               </tr>
             );
@@ -219,7 +231,7 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
 
       <button
         type="button"
-        disabled={loading || Math.round(totalPct) !== 100 || kgDiaTotal <= 0}
+        disabled={loading || Math.round(totalPct) !== 100 || num(kgDiaTotal) <= 0}
         onClick={handleSubmit}
         className="btn-primary"
       >

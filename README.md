@@ -144,28 +144,88 @@ arquivos em `public/icons/`.
 
 ---
 
-## 6. Como funciona o multi-cliente (login de cada produtor)
+## 6. Como funciona a venda (pagamento único + conta automática)
 
-- Qualquer pessoa pode criar uma conta pela tela de cadastro (`/signup`) com
-  e-mail e senha — isso é gerenciado pelo Supabase Auth.
+- O produto é vendido por **pagamento único de R$ 49,90** — não é assinatura.
+  A tela `/signup` não cria mais conta grátis: ela só mostra o preço e manda
+  a pessoa pra `/comprar`.
+- Em `/comprar`, a pessoa paga pelo Mercado Pago (Pix, cartão ou boleto).
+  Isso não exige que ela already tenha conta.
+- Quando o Mercado Pago confirma o pagamento, ele avisa o seu site através
+  de um **webhook** (`/api/webhooks/mercadopago`). O servidor então:
+  1. confirma de verdade o pagamento na API do Mercado Pago (nunca confia
+     só no aviso recebido);
+  2. cria a conta da pessoa no Supabase automaticamente, usando o e-mail
+     que ela informou no pagamento;
+  3. o Supabase manda um e-mail de convite pra esse endereço, com um link;
+  4. a pessoa clica, cai em `/definir-senha`, escolhe uma senha, e já entra
+     direto no sistema.
 - Todas as tabelas (`lotes`, `produtos`, `formulacoes`, `estoque_movimentos`,
   `despesas`, `cocho_registros`) têm uma coluna `user_id` e uma política de
   segurança (RLS) que garante: **cada usuário só enxerga e edita os próprios
-  dados**. Isso é aplicado no banco de dados, não só na tela — não dá pra
-  burlar mudando algo no navegador.
+  dados**. Isso é aplicado no banco de dados, não só na tela.
 - Não existe um "modo admin" pronto para você ver os dados de todos os
-  clientes. Se quiser isso no futuro (ex: um painel seu para dar suporte),
-  precisa de uma tabela de perfis com um campo `role='admin'` e políticas
-  extras — posso te ajudar a montar isso depois.
+  clientes. Se quiser isso no futuro, precisa de uma tabela de perfis com um
+  campo `role='admin'` e políticas extras — posso te ajudar a montar depois.
 
 ---
 
-## 7. O que ainda NÃO está incluído (próximos passos se for vender de verdade)
+## 6.1 Configurar a cobrança (Mercado Pago)
 
-- **Cobrança/assinatura** (Stripe): hoje qualquer pessoa que se cadastra tem
-  acesso completo de graça. Para cobrar, o caminho comum é integrar o
-  [Stripe Checkout](https://stripe.com/docs/checkout) + webhooks que liberam
-  ou bloqueiam o acesso conforme o pagamento.
+**No Mercado Pago:**
+
+1. Crie uma conta em [mercadopago.com.br](https://www.mercadopago.com.br)
+   (ou use a que já tiver).
+2. Vá em **Seu negócio → Configurações → Credenciais de produção**
+   (ou acesse [mercadopago.com.br/developers/panel](https://www.mercadopago.com.br/developers/panel)).
+3. Copie o **Access Token de produção** (começa com `APP_USR-...`).
+
+**No projeto:**
+
+4. Cole esse valor na variável `MP_ACCESS_TOKEN` (no `.env.local` pra testar
+   local, e nas Environment Variables do projeto na Vercel pra valer).
+5. Confirme que `NEXT_PUBLIC_SITE_URL` está com o endereço certo do seu site
+   publicado (sem barra no final) — é usado pra montar os links de volta do
+   pagamento e o endereço do webhook.
+
+**Bloquear cadastro grátis (passo manual e importante):**
+
+6. No painel do Supabase, vá em **Authentication → Settings**.
+7. Desative a opção **"Allow new users to sign up"** (ou "Enable sign ups",
+   o nome exato varia um pouco por versão do painel).
+8. Isso bloqueia qualquer criação de conta nova por fora do fluxo de
+   pagamento — inclusive pelo botão "Continuar com Google". A criação de
+   conta feita pelo webhook (com a chave de administrador) continua
+   funcionando normalmente, porque ela não passa por essa restrição.
+
+**Chave de administrador do Supabase:**
+
+9. No painel do Supabase, vá em **Project Settings → API**.
+10. Copie a chave em **service_role** (⚠️ nunca compartilhe essa chave, ela
+    tem acesso total ao banco, ignorando as travas de segurança).
+11. Cole em `SUPABASE_SERVICE_ROLE_KEY` (`.env.local` local, e nas
+    Environment Variables da Vercel — marque como variável **sensível/secreta**
+    se o painel oferecer essa opção).
+
+**Personalizar o e-mail de convite (opcional, recomendado):**
+
+12. No painel do Supabase, vá em **Authentication → Email Templates → Invite user**.
+13. Edite o texto/assunto pra ter a cara do Boi no Cocho, já que é o
+    e-mail que a pessoa recebe depois de pagar.
+
+**Testar de ponta a ponta:**
+
+14. Acesse `/comprar` no seu site publicado, faça um pagamento de teste
+    (o Mercado Pago tem [cartões de teste](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/additional-content/your-integrations/test/cards)
+    pra isso em ambiente de sandbox — pra testar de verdade em produção,
+    pode ser mais simples fazer um Pix pequeno de verdade pra si mesmo).
+15. Confirme que o e-mail de convite chegou e que o login funciona depois
+    de definir a senha.
+
+---
+
+## 7. O que ainda NÃO está incluído
+
 - **Confirmação de e-mail / recuperação de senha personalizada**: o Supabase
   já manda esses e-mails, mas com o remetente e template padrão dele. Dá pra
   personalizar em **Authentication → Email Templates** e configurar um
@@ -176,6 +236,10 @@ arquivos em `public/icons/`.
   biblioteca de geração de PDF no servidor.
 - **App mobile**: hoje é um site responsivo (funciona bem no celular pelo
   navegador), não um aplicativo de loja (App Store/Play Store).
+- **Verificação de assinatura do webhook do Mercado Pago**: hoje o servidor
+  confirma o pagamento re-consultando a API do Mercado Pago (seguro), mas
+  não confere a assinatura criptográfica do aviso em si. Dá pra reforçar
+  depois seguindo a [documentação de segurança de webhooks](https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks) deles.
 
 ---
 
@@ -184,7 +248,14 @@ arquivos em `public/icons/`.
 ```
 app/
   login/            → tela de login
-  signup/           → tela de cadastro
+  signup/           → agora só mostra o preço e manda pra /comprar
+  comprar/          → página de pagamento único (Mercado Pago)
+    sucesso/        → retorno de pagamento aprovado/pendente
+    erro/           → retorno de pagamento recusado
+  definir-senha/    → onde a pessoa cai depois de clicar no e-mail de convite
+  api/
+    webhooks/
+      mercadopago/  → recebe a confirmação de pagamento e cria a conta
   (app)/            → área logada (protegida pelo middleware)
     dashboard/      → Visão Geral
     compras/        → Compras de Gado
@@ -197,7 +268,10 @@ app/
     exportar/       → Exportar Dados
     como-usar/      → Como Usar
 lib/
-  supabase/         → clientes Supabase (browser, server)
+  supabase/
+    client.ts       → cliente Supabase do navegador
+    server.ts       → cliente Supabase do servidor (Server Components/Actions)
+    admin.ts        → cliente com a chave service_role — só usado no webhook
   calculations.ts   → toda a lógica de negócio (GMD, custo, lucro etc)
   types.ts          → tipos TypeScript das tabelas
 supabase/

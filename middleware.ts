@@ -28,12 +28,20 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/signup") ||
-    request.nextUrl.pathname.startsWith("/auth");
+  const path = request.nextUrl.pathname;
+
+  const isAuthRoute = path.startsWith("/login") ||
+    path.startsWith("/signup") ||
+    path.startsWith("/auth");
+
+  // rotas públicas: comprar (quem ainda não tem conta), definir senha (vem do e-mail),
+  // e a API (inclui o webhook do Mercado Pago — não tem usuário logado nem faz sentido redirecionar)
+  const isPublicRoute = path.startsWith("/comprar") ||
+    path.startsWith("/definir-senha") ||
+    path.startsWith("/api");
 
   // não logado tentando acessar área interna -> manda pro login
-  if (!user && !isAuthRoute && request.nextUrl.pathname !== "/") {
+  if (!user && !isAuthRoute && !isPublicRoute && path !== "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
