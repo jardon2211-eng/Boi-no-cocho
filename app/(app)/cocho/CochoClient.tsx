@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { registrarTratosDoDia, excluirCocho, criarFaseAdaptacao, excluirFaseAdaptacao, TratoInput } from "./actions";
 import { Lote, FaseAdaptacao } from "@/lib/types";
+import { sugestaoFaseAdaptacao } from "@/lib/calculations";
 
 const TRATOS_PADRAO: TratoInput[] = [
   { trato_numero: 1, horario: "07:00", racao_kg: 0, volumoso_kg: 0, sobrou: false, sobra_kg: 0 },
@@ -158,7 +159,7 @@ export function ExcluirCochoBotao({ id }: { id: string }) {
   );
 }
 
-export function FasesAdaptacaoBotao({ loteId, loteNome, fases }: { loteId: string; loteNome: string; fases: FaseAdaptacao[] }) {
+export function FasesAdaptacaoBotao({ loteId, loteNome, fases, pesoVivo }: { loteId: string; loteNome: string; fases: FaseAdaptacao[]; pesoVivo: number }) {
   const [open, setOpen] = useState(false);
   const [dias, setDias] = useState(3);
   const [racaoKg, setRacaoKg] = useState(0);
@@ -166,6 +167,13 @@ export function FasesAdaptacaoBotao({ loteId, loteNome, fases }: { loteId: strin
   const [loading, setLoading] = useState(false);
 
   const ordenadas = [...fases].sort((a, b) => a.ordem - b.ordem);
+  const proximaFase = ordenadas.length + 1;
+
+  function preencherSugestao() {
+    const { racaoKg: r, volumosoKg: v } = sugestaoFaseAdaptacao(proximaFase, pesoVivo);
+    setRacaoKg(r);
+    setVolumosoKg(v);
+  }
 
   async function handleAdicionar() {
     setLoading(true);
@@ -221,9 +229,14 @@ export function FasesAdaptacaoBotao({ loteId, loteNome, fases }: { loteId: strin
             )}
 
             <div className="border-t border-gray-100 pt-4">
-              <p className="text-xs font-semibold text-gray-600 mb-2">
-                Adicionar {ordenadas.length + 1}ª fase
-              </p>
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-xs font-semibold text-gray-600">
+                  Adicionar {proximaFase}ª fase
+                </p>
+                <button type="button" onClick={preencherSugestao} className="text-xs font-medium text-brand-600 hover:underline">
+                  📊 Sugerir (Método Ararate · peso vivo {pesoVivo} kg)
+                </button>
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="label-field">Dias</label>

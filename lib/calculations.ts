@@ -56,6 +56,30 @@ export function previstoAdaptacaoHoje(
   return { emAdaptacao: false, fase: null, diaDaFase: 0, racaoKg: 0, volumosoKg: 0 };
 }
 
+/**
+ * Tabela de referência do Método Ararate (% do peso vivo por fase) — usada só como
+ * SUGESTÃO automática ao cadastrar uma fase nova, pra não obrigar o produtor a decorar
+ * nem calcular na mão. O valor sugerido pode ser editado livremente antes de salvar.
+ */
+export const SUGESTAO_ARARATE = [
+  { pctRacao: 0.3, pctVolumoso: 3.0 },
+  { pctRacao: 0.8, pctVolumoso: 2.5 },
+  { pctRacao: 1.3, pctVolumoso: 2.0 },
+  { pctRacao: 1.8, pctVolumoso: 1.5 },
+  { pctRacao: 2.3, pctVolumoso: 1.0 },
+  { pctRacao: 2.5, pctVolumoso: 0.8 }, // 15 dias em diante — usada também pra qualquer fase além da 6ª
+] as const;
+
+/** Sugestão de kg de ração/volumoso pra próxima fase (1ª, 2ª...), com base no peso vivo do lote. */
+export function sugestaoFaseAdaptacao(numeroDaFase: number, pesoVivo: number): { racaoKg: number; volumosoKg: number } {
+  const indice = Math.min(numeroDaFase, SUGESTAO_ARARATE.length) - 1;
+  const { pctRacao, pctVolumoso } = SUGESTAO_ARARATE[Math.max(0, indice)];
+  return {
+    racaoKg: Math.round(pesoVivo * (pctRacao / 100) * 100) / 100,
+    volumosoKg: Math.round(pesoVivo * (pctVolumoso / 100) * 100) / 100,
+  };
+}
+
 /** Valor total pago na compra do lote */
 export function valorCompra(lote: Lote): number {
   return lote.quantidade_inicial * lote.peso_entrada * lote.preco_compra_kg;

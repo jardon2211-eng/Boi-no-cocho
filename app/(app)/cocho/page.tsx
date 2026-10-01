@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Lote, Formulacao, FaseAdaptacao } from "@/lib/types";
-import { numeroAnimaisAtual, custoMedioPorKgDieta, custoVolumosoPorKg, custoRegistroCocho, previstoAdaptacaoHoje, diasConfinamento, formatBRL } from "@/lib/calculations";
+import { numeroAnimaisAtual, custoMedioPorKgDieta, custoVolumosoPorKg, custoRegistroCocho, previstoAdaptacaoHoje, pesoVivoAtual, diasConfinamento, formatBRL } from "@/lib/calculations";
 import { NovoRegistroCochoForm, ExcluirCochoBotao, FasesAdaptacaoBotao } from "./CochoClient";
 
 const NOME_TRATO: Record<number, string> = { 1: "1º Trato", 2: "2º Trato", 3: "3º Trato" };
@@ -123,7 +123,7 @@ export default async function CochoPage() {
                     : "✓ Dentro do previsto"}
                 </p>
               )}
-              <FasesAdaptacaoBotao loteId={lote.id} loteNome={lote.nome} fases={fasesDoLote} />
+              <FasesAdaptacaoBotao loteId={lote.id} loteNome={lote.nome} fases={fasesDoLote} pesoVivo={pesoVivoAtual(lote)} />
             </div>
           ))}
         </div>
