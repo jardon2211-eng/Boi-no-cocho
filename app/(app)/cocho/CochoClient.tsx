@@ -234,7 +234,7 @@ export function FasesAdaptacaoBotao({ loteId, loteNome, fases, pesoVivo }: { lot
                   Adicionar {proximaFase}ª fase
                 </p>
                 <button type="button" onClick={preencherSugestao} className="text-xs font-medium text-brand-600 hover:underline">
-                  📊 Sugerir (Método Ararate · peso vivo {pesoVivo} kg)
+                  📊 Sugerir (Protocolo Boi no Cocho · peso vivo {pesoVivo} kg)
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-2">

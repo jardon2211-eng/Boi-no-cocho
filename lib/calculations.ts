@@ -57,11 +57,11 @@ export function previstoAdaptacaoHoje(
 }
 
 /**
- * Tabela de referência do Método Ararate (% do peso vivo por fase) — usada só como
+ * Tabela de referência do Protocolo Boi no Cocho (% do peso vivo por fase) — usada só como
  * SUGESTÃO automática ao cadastrar uma fase nova, pra não obrigar o produtor a decorar
  * nem calcular na mão. O valor sugerido pode ser editado livremente antes de salvar.
  */
-export const SUGESTAO_ARARATE = [
+export const SUGESTAO_PROTOCOLO_PADRAO = [
   { pctRacao: 0.3, pctVolumoso: 3.0 },
   { pctRacao: 0.8, pctVolumoso: 2.5 },
   { pctRacao: 1.3, pctVolumoso: 2.0 },
@@ -72,8 +72,8 @@ export const SUGESTAO_ARARATE = [
 
 /** Sugestão de kg de ração/volumoso pra próxima fase (1ª, 2ª...), com base no peso vivo do lote. */
 export function sugestaoFaseAdaptacao(numeroDaFase: number, pesoVivo: number): { racaoKg: number; volumosoKg: number } {
-  const indice = Math.min(numeroDaFase, SUGESTAO_ARARATE.length) - 1;
-  const { pctRacao, pctVolumoso } = SUGESTAO_ARARATE[Math.max(0, indice)];
+  const indice = Math.min(numeroDaFase, SUGESTAO_PROTOCOLO_PADRAO.length) - 1;
+  const { pctRacao, pctVolumoso } = SUGESTAO_PROTOCOLO_PADRAO[Math.max(0, indice)];
   return {
     racaoKg: Math.round(pesoVivo * (pctRacao / 100) * 100) / 100,
     volumosoKg: Math.round(pesoVivo * (pctVolumoso / 100) * 100) / 100,
