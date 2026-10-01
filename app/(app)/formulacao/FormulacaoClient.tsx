@@ -190,8 +190,11 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
         </div>
       </div>
       <p className="text-xs text-gray-500 mb-4">
-        Os % e o Kg/Dia abaixo são só da <strong>ração concentrada</strong> (milho, núcleo, torta...).
-        O volumoso (silagem, cana...) é lançado à parte na Ração no Cocho, com o preço por kg informado aqui ao lado.
+        Os % e o Kg/Dia abaixo são só da <strong>ração concentrada</strong> (milho, núcleo, torta...),
+        e valem a partir do dia 16 de confinamento (fase estável). O volumoso (silagem, cana...) é
+        lançado à parte na Ração no Cocho, com o preço por kg informado aqui ao lado.
+        Nos primeiros 15 dias, a aba <strong>Ração no Cocho</strong> já calcula sozinha o previsto
+        pela fase de adaptação (% do peso vivo) — não precisa configurar nada aqui pra isso.
       </p>
 
       <table className="w-full text-sm mb-2">

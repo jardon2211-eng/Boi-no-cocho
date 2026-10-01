@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Lote, Formulacao } from "@/lib/types";
-import { numeroAnimaisAtual, custoMedioPorKgDieta, custoVolumosoPorKg, custoRegistroCocho, formatBRL } from "@/lib/calculations";
+import { numeroAnimaisAtual, custoMedioPorKgDieta, custoVolumosoPorKg, custoRegistroCocho, previstoAdaptacaoHoje, diasConfinamento, formatBRL } from "@/lib/calculations";
 import { NovoRegistroCochoForm, ExcluirCochoBotao } from "./CochoClient";
 
 const NOME_TRATO: Record<number, string> = { 1: "1º Trato", 2: "2º Trato", 3: "3º Trato" };
@@ -31,12 +31,25 @@ export default async function CochoPage() {
     const custoVolKg = custoVolumosoPorKg(todasFormulacoes, lote.id);
     const diasDistintos = new Set(registrosDoLote.map((r) => r.data)).size;
     const mediaDiariaKg = diasDistintos > 0 ? kgLiquido / diasDistintos : 0;
-    const previstoKgDia = numeroAnimaisAtual(lote) * (
+
+    const dias = diasConfinamento(lote);
+    const adaptacao = previstoAdaptacaoHoje(lote);
+    // nos primeiros 15 dias, o previsto vem da fase de adaptação (% do peso vivo);
+    // depois disso, vem da dieta fixa aprovada em Formulação
+    const previstoKgDiaFormulacao = numeroAnimaisAtual(lote) * (
       todasFormulacoes
         .filter((f) => f.lote_id === lote.id && f.status === "Aprovado")
         .reduce((s, f) => s + f.kg_animal_dia, 0)
     );
-    return { lote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos };
+    const previstoKgDiaAdaptacao = numeroAnimaisAtual(lote) * (adaptacao.racaoKg + adaptacao.volumosoKg);
+    const previstoKgDia = adaptacao.emAdaptacao ? previstoKgDiaAdaptacao : previstoKgDiaFormulacao;
+
+    return {
+      lote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos,
+      dias, emAdaptacao: adaptacao.emAdaptacao, periodo: adaptacao.periodo,
+      previstoRacaoAdaptacao: numeroAnimaisAtual(lote) * adaptacao.racaoKg,
+      previstoVolumosoAdaptacao: numeroAnimaisAtual(lote) * adaptacao.volumosoKg,
+    };
   });
 
   return (
@@ -56,12 +69,24 @@ export default async function CochoPage() {
         <p className="text-sm text-gray-400 mb-8">Nenhum lote ativo.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {resumoPorLote.map(({ lote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos }) => (
+          {resumoPorLote.map(({ lote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos, dias, emAdaptacao, periodo, previstoRacaoAdaptacao, previstoVolumosoAdaptacao }) => (
             <div key={lote.id} className="card">
               <div className="flex justify-between items-start">
                 <span className="font-bold text-gray-800">{lote.nome}</span>
                 <span className="badge-ativo">ATIVO</span>
               </div>
+              {emAdaptacao && (
+                <div className="mt-2 mb-1 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                  <p className="text-xs font-semibold text-amber-800">
+                    🌱 Fase de adaptação — dia {dias} (período {periodo.diaIni}
+                    {periodo.diaFim === Infinity ? "+" : `-${periodo.diaFim}`})
+                  </p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    Previsto hoje: {previstoRacaoAdaptacao.toFixed(1)} kg ração + {previstoVolumosoAdaptacao.toFixed(1)} kg volumoso
+                    {" "}({periodo.pctRacao}% + {periodo.pctVolumoso}% do peso vivo)
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
                 <div>
                   <p className="text-gray-400 text-xs">Colocado (líquido)</p>
@@ -76,7 +101,7 @@ export default async function CochoPage() {
                   <p className="font-semibold">{mediaDiariaKg.toFixed(1)} kg</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 text-xs">Previsto pela dieta</p>
+                  <p className="text-gray-400 text-xs">Previsto {emAdaptacao ? "(adaptação)" : "pela dieta"}</p>
                   <p className="font-semibold text-purple-600">{previstoKgDia.toFixed(1)} kg/dia</p>
                 </div>
               </div>
@@ -86,10 +111,10 @@ export default async function CochoPage() {
               {diasDistintos > 0 && previstoKgDia > 0 && (
                 <p className={`text-xs mt-2 ${mediaDiariaKg > previstoKgDia * 1.1 ? "text-amber-600" : mediaDiariaKg < previstoKgDia * 0.9 ? "text-blue-600" : "text-green-600"}`}>
                   {mediaDiariaKg > previstoKgDia * 1.1
-                    ? "⚠ Colocando mais que o previsto pela dieta"
+                    ? "⚠ Colocando mais que o previsto"
                     : mediaDiariaKg < previstoKgDia * 0.9
-                    ? "ℹ Colocando menos que o previsto pela dieta"
-                    : "✓ Dentro do previsto pela dieta"}
+                    ? "ℹ Colocando menos que o previsto"
+                    : "✓ Dentro do previsto"}
                 </p>
               )}
             </div>

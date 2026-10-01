@@ -4,7 +4,7 @@ const PASSOS = [
   { num: "3", titulo: "Monte a dieta do lote", desc: "Em Formulação, informe quanto de cada produto vai por animal/dia para o lote. Clique em Aprovar quando fechar a dieta." },
   { num: "4", titulo: "Acompanhe o consumo", desc: "Relatório Consumo atualiza sozinho com base nas dietas Aprovadas e mostra a evolução por ingrediente." },
   { num: "5", titulo: "Controle o estoque", desc: "Lance entradas (compra de insumo) e saídas na aba Estoque Ração. O saldo e o alerta de estoque baixo são automáticos." },
-  { num: "6", titulo: "Anote a ração no cocho", desc: "Todo dia, registre os 3 tratos (manhã, meio-dia, tarde) de cada lote em Ração no Cocho — ração e volumoso separados, e se sobrou algo. O app avisa se está acima ou abaixo do previsto pela dieta." },
+  { num: "6", titulo: "Anote a ração no cocho", desc: "Todo dia, registre os 3 tratos (manhã, meio-dia, tarde) de cada lote em Ração no Cocho — ração e volumoso separados, e se sobrou algo. Nos primeiros 15 dias o app já calcula sozinho o previsto pela fase de adaptação (% do peso vivo); depois disso, usa a dieta fixa aprovada em Formulação." },
   { num: "7", titulo: "Atualize peso e venda", desc: "Em Lotes, atualize o peso periodicamente. Ao vender, registre data, peso e preço — o lucro é calculado sozinho." },
   { num: "8", titulo: "Lance despesas extras", desc: "Frete, veterinário, mão de obra etc. entram em Despesas, vinculados ao lote ou como despesa geral." },
   { num: "9", titulo: "Veja o painel geral", desc: "Visão Geral resume tudo: bois ativos, peso médio, GMD, faturamento, lucro por animal e custo de ração." },

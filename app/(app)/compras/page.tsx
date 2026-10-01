@@ -59,6 +59,7 @@ export default async function ComprasPage() {
                   <div>
                     <p className="text-gray-400 text-xs">Preço/kg Vivo</p>
                     <p className="font-semibold">{formatBRL(lote.preco_compra_kg)}</p>
+                    <p className="text-xs text-gray-400">{formatBRL(lote.preco_compra_kg * 15)}/@</p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-xs">Valor Total</p>

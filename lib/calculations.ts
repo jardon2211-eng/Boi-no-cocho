@@ -24,6 +24,53 @@ export function gmdReal(lote: Lote): number | null {
   return (lote.peso_atual - lote.peso_entrada) / dias;
 }
 
+/** Peso vivo mais recente conhecido do lote — usa o peso já registrado em Lotes,
+ *  ou o peso de entrada enquanto ainda não houver nenhuma pesagem (comum nos primeiros dias). */
+export function pesoVivoAtual(lote: Lote): number {
+  return lote.peso_atual ?? lote.peso_entrada;
+}
+
+/**
+ * Tabela padrão de adaptação ao confinamento (Método Ararate): nos primeiros dias o boi
+ * come pouca ração e bastante volumoso, e isso sobe aos poucos até estabilizar a partir
+ * do dia 16. % é sobre o peso vivo do animal.
+ */
+export const FASE_ADAPTACAO = [
+  { diaIni: 1, diaFim: 3, pctRacao: 0.3, pctVolumoso: 3.0 },
+  { diaIni: 4, diaFim: 6, pctRacao: 0.8, pctVolumoso: 2.5 },
+  { diaIni: 7, diaFim: 9, pctRacao: 1.3, pctVolumoso: 2.0 },
+  { diaIni: 10, diaFim: 12, pctRacao: 1.8, pctVolumoso: 1.5 },
+  { diaIni: 13, diaFim: 15, pctRacao: 2.3, pctVolumoso: 1.0 },
+  { diaIni: 16, diaFim: Infinity, pctRacao: 2.5, pctVolumoso: 0.8 },
+] as const;
+
+export type FaseAdaptacaoPeriodo = (typeof FASE_ADAPTACAO)[number];
+
+/** Retorna o período da tabela de adaptação que corresponde ao dia de confinamento informado. */
+export function faseAdaptacaoPorDia(dias: number): FaseAdaptacaoPeriodo {
+  const dia = Math.max(1, dias);
+  return FASE_ADAPTACAO.find((f) => dia >= f.diaIni && dia <= f.diaFim) ?? FASE_ADAPTACAO[FASE_ADAPTACAO.length - 1];
+}
+
+/**
+ * Previsão de ração e volumoso pro dia de hoje, com base na fase de adaptação e no peso
+ * vivo atual do lote. emAdaptacao=false quando já passou do dia 15 (fase final/estável) —
+ * nesse caso o previsto certo é o da dieta fixa cadastrada em Formulação, não mais este.
+ */
+export function previstoAdaptacaoHoje(lote: Lote): {
+  emAdaptacao: boolean; periodo: FaseAdaptacaoPeriodo; racaoKg: number; volumosoKg: number;
+} {
+  const dias = diasConfinamento(lote);
+  const periodo = faseAdaptacaoPorDia(dias);
+  const peso = pesoVivoAtual(lote);
+  return {
+    emAdaptacao: dias <= 15,
+    periodo,
+    racaoKg: peso * (periodo.pctRacao / 100),
+    volumosoKg: peso * (periodo.pctVolumoso / 100),
+  };
+}
+
 /** Valor total pago na compra do lote */
 export function valorCompra(lote: Lote): number {
   return lote.quantidade_inicial * lote.peso_entrada * lote.preco_compra_kg;
