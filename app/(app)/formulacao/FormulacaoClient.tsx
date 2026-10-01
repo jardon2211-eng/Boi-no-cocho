@@ -125,6 +125,7 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
   const [loteId, setLoteId] = useState<string>("__independente__");
   const [data, setData] = useState(new Date().toISOString().slice(0, 10));
   const [kgDiaTotal, setKgDiaTotal] = useState(0);
+  const [custoVolumosoKg, setCustoVolumosoKg] = useState(0);
   const [itens, setItens] = useState<LinhaReceita[]>(() => [novaLinha()]);
   const [loading, setLoading] = useState(false);
 
@@ -150,9 +151,10 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
     try {
       const loteReal = loteId === "__independente__" ? null : loteId;
       const payload: ItemReceita[] = itens.map(({ produto_id, percentual }) => ({ produto_id, percentual: num(percentual) }));
-      await criarDietaCompleta(loteReal, data, num(kgDiaTotal), payload);
+      await criarDietaCompleta(loteReal, data, num(kgDiaTotal), num(custoVolumosoKg), payload);
       setItens([novaLinha()]);
       setKgDiaTotal(0);
+      setCustoVolumosoKg(0);
     } finally {
       setLoading(false);
     }
@@ -164,7 +166,7 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
 
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-1">
         <div>
           <label className="label-field">Lote</label>
           <select value={loteId} onChange={(e) => setLoteId(e.target.value)} className="input-field">
@@ -177,17 +179,26 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
           <input type="date" value={data} onChange={(e) => setData(e.target.value)} className="input-field" />
         </div>
         <div>
-          <label className="label-field">Kg/Dia Total (por animal)</label>
+          <label className="label-field">Kg/Dia de Ração (concentrado)</label>
           <input type="number" step="0.01" min={0} value={kgDiaTotal || ""}
-            onChange={(e) => setKgDiaTotal(parseFloat(e.target.value) || 0)} className="input-field" placeholder="Ex: 8" />
+            onChange={(e) => setKgDiaTotal(parseFloat(e.target.value) || 0)} className="input-field" placeholder="Ex: 6" />
+        </div>
+        <div>
+          <label className="label-field">Custo do Volumoso (R$/kg)</label>
+          <input type="number" step="0.01" min={0} value={custoVolumosoKg || ""}
+            onChange={(e) => setCustoVolumosoKg(parseFloat(e.target.value) || 0)} className="input-field" placeholder="Ex: 0.40" />
         </div>
       </div>
+      <p className="text-xs text-gray-500 mb-4">
+        Os % e o Kg/Dia abaixo são só da <strong>ração concentrada</strong> (milho, núcleo, torta...).
+        O volumoso (silagem, cana...) é lançado à parte na Ração no Cocho, com o preço por kg informado aqui ao lado.
+      </p>
 
       <table className="w-full text-sm mb-2">
         <thead>
           <tr className="text-left text-gray-400 border-b border-gray-100">
             <th className="py-2 font-medium">Produto</th>
-            <th className="py-2 font-medium">% na Dieta</th>
+            <th className="py-2 font-medium">% na Ração</th>
             <th className="py-2 font-medium">Kg/Dia</th>
             <th className="py-2 font-medium">Custo/Dia</th>
             <th className="py-2 font-medium"></th>
@@ -224,9 +235,9 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
         + Adicionar ingrediente
       </button>
 
-      <div className={`rounded-lg p-3 mb-4 text-sm flex justify-between items-center ${Math.round(totalPct) === 100 ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
-        <span>Total da dieta: <strong>{totalPct.toFixed(1)}%</strong> {Math.round(totalPct) !== 100 && "(precisa somar 100%)"}</span>
-        <span>Custo/kg de ração: <strong>{formatBRL(custoPorKgRacao)}</strong> · Custo/animal/dia: <strong>{formatBRL(custoAnimalDia)}</strong></span>
+      <div className={`rounded-lg p-3 mb-4 text-sm flex justify-between items-center flex-wrap gap-2 ${Math.round(totalPct) === 100 ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
+        <span>Total da ração: <strong>{totalPct.toFixed(1)}%</strong> {Math.round(totalPct) !== 100 && "(precisa somar 100%)"}</span>
+        <span>Custo/kg de ração: <strong>{formatBRL(custoPorKgRacao)}</strong> · Custo ração/animal/dia: <strong>{formatBRL(custoAnimalDia)}</strong></span>
       </div>
 
       <button

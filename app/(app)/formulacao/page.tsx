@@ -18,13 +18,13 @@ export default async function FormulacaoPage() {
   const todasFormulacoes = (formulacoes ?? []) as any[];
 
   // agrupa as linhas (uma por ingrediente) em "dietas" — mesma lote_id + mesma data
-  const grupos = new Map<string, { lote_id: string | null; loteNome: string; data: string; kg_dia_total: number; status: string; itens: any[] }>();
+  const grupos = new Map<string, { lote_id: string | null; loteNome: string; data: string; kg_dia_total: number; custo_volumoso_kg: number; status: string; itens: any[] }>();
   for (const f of todasFormulacoes) {
     const chave = `${f.lote_id ?? "sem-lote"}__${f.data}`;
     if (!grupos.has(chave)) {
       grupos.set(chave, {
         lote_id: f.lote_id, loteNome: f.lotes?.nome ?? "Sem Lote (Independente)",
-        data: f.data, kg_dia_total: f.kg_dia_total, status: f.status, itens: [],
+        data: f.data, kg_dia_total: f.kg_dia_total, custo_volumoso_kg: f.custo_volumoso_kg ?? 0, status: f.status, itens: [],
       });
     }
     const g = grupos.get(chave)!;
@@ -98,10 +98,11 @@ export default async function FormulacaoPage() {
                       ))}
                     </tbody>
                   </table>
-                  <div className="flex justify-between text-sm mt-3 pt-2 border-t border-gray-50 text-gray-600">
-                    <span>Kg/dia total: <strong>{d.kg_dia_total} kg</strong></span>
-                    <span>Custo/kg de ração: <strong>{formatBRL(custoKg)}</strong></span>
-                    <span>Custo/animal/dia: <strong className="text-green-700">{formatBRL(custoDia)}</strong></span>
+                  <div className="flex justify-between text-sm mt-3 pt-2 border-t border-gray-50 text-gray-600 flex-wrap gap-2">
+                    <span>Kg/dia ração: <strong>{d.kg_dia_total} kg</strong></span>
+                    <span>Custo/kg ração: <strong>{formatBRL(custoKg)}</strong></span>
+                    <span>Volumoso: <strong>{formatBRL(d.custo_volumoso_kg)}/kg</strong></span>
+                    <span>Custo ração/animal/dia: <strong className="text-green-700">{formatBRL(custoDia)}</strong></span>
                   </div>
                 </div>
               );

@@ -44,9 +44,13 @@ create table if not exists produtos (
   created_at timestamptz not null default now()
 );
 
--- ---------- FORMULAÇÕES (dieta de cada lote, por % de cada ingrediente) ----------
--- Cada linha é um ingrediente de uma "dieta" (mesmo lote_id + mesma data = mesma dieta).
--- percentual de todas as linhas da mesma dieta deve somar 100%.
+-- ---------- FORMULAÇÕES (dieta de cada lote, por % de cada ingrediente da RAÇÃO) ----------
+-- Cada linha é um ingrediente da RAÇÃO CONCENTRADA de uma "dieta" (mesmo lote_id + mesma
+-- data = mesma dieta). percentual de todas as linhas da mesma dieta deve somar 100%.
+-- kg_dia_total e custo_volumoso_kg ficam repetidos em todas as linhas da mesma dieta
+-- (são "cabeçalho" da dieta, não por ingrediente) — kg_dia_total é só da ração
+-- concentrada; o volumoso (silagem etc.) é precificado à parte por custo_volumoso_kg,
+-- porque normalmente tem um custo bem mais baixo que o concentrado.
 -- lote_id pode ficar em branco: é a "Formulação Independente" (simula custo antes de comprar o gado).
 create table if not exists formulacoes (
   id uuid primary key default gen_random_uuid(),
@@ -56,6 +60,7 @@ create table if not exists formulacoes (
   data date not null default current_date,
   percentual numeric not null default 0,
   kg_dia_total numeric not null default 0,
+  custo_volumoso_kg numeric not null default 0,
   kg_animal_dia numeric generated always as (
     coalesce(percentual, 0) / 100.0 * coalesce(kg_dia_total, 0)
   ) stored,

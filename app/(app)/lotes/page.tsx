@@ -79,7 +79,7 @@ function LoteCard({ lote, formulacoes, despesas }: { lote: Lote; formulacoes: Fo
           <p className="font-semibold text-green-700">{pesoFinalProjetado(lote).toFixed(1)} kg</p>
         </div>
         <div>
-          <p className="text-gray-400 text-xs">GMD {lote.status === "Ativo" ? "Real" : "Desejado"}</p>
+          <p className="text-gray-400 text-xs">GMD {gmd !== null ? "Real" : "Desejado"}</p>
           <p className="font-semibold text-purple-600">
             {gmd !== null ? gmd.toFixed(2) : lote.gmd_esperado.toFixed(2)} kg/dia
           </p>

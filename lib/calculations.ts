@@ -80,7 +80,19 @@ export function custoMedioPorKgDieta(formulacoes: Formulacao[], loteId: string):
   return custoDietaPorAnimalDia(formulacoes, loteId) / kgTotalPorAnimalDia;
 }
 
-/** Custo real do que foi colocado no cocho num trato (ração + volumoso, descontando a sobra se houver) */
+/** Preço do volumoso (R$/kg) da dieta aprovada mais recente do lote — 0 se não informado. */
+export function custoVolumosoPorKg(formulacoes: Formulacao[], loteId: string): number {
+  const aprovadas = formulacoes.filter((f) => f.lote_id === loteId && f.status === "Aprovado");
+  if (aprovadas.length === 0) return 0;
+  const maisRecente = aprovadas.reduce((a, b) => (new Date(b.data) > new Date(a.data) ? b : a));
+  return maisRecente.custo_volumoso_kg ?? 0;
+}
+
+/**
+ * Custo real do que foi colocado no cocho num trato — ração (concentrado) e volumoso são
+ * precificados SEPARADAMENTE, porque costumam ter custos bem diferentes (ex: concentrado
+ * R$1,95/kg vs. silagem R$0,40/kg). A sobra é descontada proporcionalmente dos dois.
+ */
 export function custoRegistroCocho(
   racaoKg: number,
   volumosoKg: number,
@@ -90,8 +102,15 @@ export function custoRegistroCocho(
   loteId: string
 ): number {
   const totalColocado = racaoKg + volumosoKg;
-  const kgLiquido = Math.max(0, totalColocado - (sobrou ? sobraKg : 0));
-  return kgLiquido * custoMedioPorKgDieta(formulacoes, loteId);
+  if (totalColocado === 0) return 0;
+  const sobraEfetiva = sobrou ? Math.min(sobraKg, totalColocado) : 0;
+  const proporcaoRestante = 1 - sobraEfetiva / totalColocado;
+  const racaoLiquida = racaoKg * proporcaoRestante;
+  const volumosoLiquido = volumosoKg * proporcaoRestante;
+  return (
+    racaoLiquida * custoMedioPorKgDieta(formulacoes, loteId) +
+    volumosoLiquido * custoVolumosoPorKg(formulacoes, loteId)
+  );
 }
 
 

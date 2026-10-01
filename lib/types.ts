@@ -37,9 +37,10 @@ export type Formulacao = {
   lote_id: string | null; // pode ser null = "Formulação Independente" (sem lote / planejamento de custo)
   produto_id: string;
   data: string;
-  percentual: number;      // % desse produto na dieta (soma dos produtos da mesma dieta = 100%)
-  kg_dia_total: number;    // kg totais/animal/dia da dieta (compartilhado entre os produtos da mesma dieta)
-  kg_animal_dia: number;   // calculado automaticamente = percentual/100 * kg_dia_total
+  percentual: number;        // % desse produto na RAÇÃO (soma dos produtos da mesma dieta = 100%)
+  kg_dia_total: number;      // kg de RAÇÃO/animal/dia (não inclui volumoso)
+  custo_volumoso_kg: number; // preço do volumoso (R$/kg), compartilhado na mesma dieta
+  kg_animal_dia: number;     // calculado automaticamente = percentual/100 * kg_dia_total
   status: "Pendente" | "Aprovado";
   created_at: string;
   produtos?: Produto;

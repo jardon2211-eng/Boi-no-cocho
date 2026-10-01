@@ -55,7 +55,13 @@ export async function criarFormulacao(formData: FormData) {
 }
 
 /** Cria de uma vez todos os ingredientes de uma dieta (mesma data/lote/kg_dia_total, % de cada produto). */
-export async function criarDietaCompleta(loteId: string | null, data: string, kgDiaTotal: number, itens: ItemReceita[]) {
+export async function criarDietaCompleta(
+  loteId: string | null,
+  data: string,
+  kgDiaTotal: number,
+  custoVolumosoKg: number,
+  itens: ItemReceita[]
+) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Não autenticado");
@@ -69,6 +75,7 @@ export async function criarDietaCompleta(loteId: string | null, data: string, kg
       data,
       percentual: i.percentual,
       kg_dia_total: kgDiaTotal,
+      custo_volumoso_kg: custoVolumosoKg,
       status: "Pendente" as const,
     }));
   if (linhas.length === 0) return;
@@ -79,6 +86,7 @@ export async function criarDietaCompleta(loteId: string | null, data: string, kg
   revalidatePath("/consumo");
   revalidatePath("/dashboard");
   revalidatePath("/lotes");
+  revalidatePath("/cocho");
 }
 
 export async function aprovarFormulacao(id: string) {

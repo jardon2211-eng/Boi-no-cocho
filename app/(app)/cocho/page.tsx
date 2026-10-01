@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Lote, Formulacao } from "@/lib/types";
-import { numeroAnimaisAtual, custoMedioPorKgDieta, formatBRL } from "@/lib/calculations";
+import { numeroAnimaisAtual, custoMedioPorKgDieta, custoVolumosoPorKg, custoRegistroCocho, formatBRL } from "@/lib/calculations";
 import { NovoRegistroCochoForm, ExcluirCochoBotao } from "./CochoClient";
 
 const NOME_TRATO: Record<number, string> = { 1: "1º Trato", 2: "2º Trato", 3: "3º Trato" };
@@ -20,12 +20,15 @@ export default async function CochoPage() {
   const loteById = new Map(todosLotes.map((l) => [l.id, l]));
 
   const kgLiquidoRegistro = (r: any) => Math.max(0, r.racao_kg + r.volumoso_kg - (r.sobrou ? r.sobra_kg : 0));
+  const custoRegistro = (r: any, loteId: string) =>
+    custoRegistroCocho(r.racao_kg, r.volumoso_kg, r.sobrou, r.sobra_kg, todasFormulacoes, loteId);
 
   const resumoPorLote = lotesAtivos.map((lote) => {
     const registrosDoLote = todosRegistros.filter((r) => r.lote_id === lote.id);
     const kgLiquido = registrosDoLote.reduce((s, r) => s + kgLiquidoRegistro(r), 0);
-    const custoKg = custoMedioPorKgDieta(todasFormulacoes, lote.id);
-    const custoTotal = kgLiquido * custoKg;
+    const custoTotal = registrosDoLote.reduce((s, r) => s + custoRegistro(r, lote.id), 0);
+    const custoRacaoKg = custoMedioPorKgDieta(todasFormulacoes, lote.id);
+    const custoVolKg = custoVolumosoPorKg(todasFormulacoes, lote.id);
     const diasDistintos = new Set(registrosDoLote.map((r) => r.data)).size;
     const mediaDiariaKg = diasDistintos > 0 ? kgLiquido / diasDistintos : 0;
     const previstoKgDia = numeroAnimaisAtual(lote) * (
@@ -33,7 +36,7 @@ export default async function CochoPage() {
         .filter((f) => f.lote_id === lote.id && f.status === "Aprovado")
         .reduce((s, f) => s + f.kg_animal_dia, 0)
     );
-    return { lote, kgLiquido, custoTotal, mediaDiariaKg, previstoKgDia, diasDistintos };
+    return { lote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos };
   });
 
   return (
@@ -42,7 +45,8 @@ export default async function CochoPage() {
         <div>
           <h1 className="text-2xl font-bold text-brand-700">🌾 Ração no Cocho</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Anote os 3 tratos do dia (ração e volumoso) de cada lote — o custo é calculado com base na dieta aprovada.
+            Anote os 3 tratos do dia (ração e volumoso) de cada lote — ração e volumoso são
+            precificados separadamente, com base na dieta aprovada.
           </p>
         </div>
         <NovoRegistroCochoForm lotes={lotesAtivos} />
@@ -52,7 +56,7 @@ export default async function CochoPage() {
         <p className="text-sm text-gray-400 mb-8">Nenhum lote ativo.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {resumoPorLote.map(({ lote, kgLiquido, custoTotal, mediaDiariaKg, previstoKgDia, diasDistintos }) => (
+          {resumoPorLote.map(({ lote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos }) => (
             <div key={lote.id} className="card">
               <div className="flex justify-between items-start">
                 <span className="font-bold text-gray-800">{lote.nome}</span>
@@ -76,8 +80,11 @@ export default async function CochoPage() {
                   <p className="font-semibold text-purple-600">{previstoKgDia.toFixed(1)} kg/dia</p>
                 </div>
               </div>
+              <p className="text-xs text-gray-400 mt-3 border-t border-gray-50 pt-2">
+                Ração: {formatBRL(custoRacaoKg)}/kg · Volumoso: {formatBRL(custoVolKg)}/kg
+              </p>
               {diasDistintos > 0 && previstoKgDia > 0 && (
-                <p className={`text-xs mt-3 ${mediaDiariaKg > previstoKgDia * 1.1 ? "text-amber-600" : mediaDiariaKg < previstoKgDia * 0.9 ? "text-blue-600" : "text-green-600"}`}>
+                <p className={`text-xs mt-2 ${mediaDiariaKg > previstoKgDia * 1.1 ? "text-amber-600" : mediaDiariaKg < previstoKgDia * 0.9 ? "text-blue-600" : "text-green-600"}`}>
                   {mediaDiariaKg > previstoKgDia * 1.1
                     ? "⚠ Colocando mais que o previsto pela dieta"
                     : mediaDiariaKg < previstoKgDia * 0.9
@@ -113,7 +120,7 @@ export default async function CochoPage() {
             ) : todosRegistros.map((r) => {
               const lote = loteById.get(r.lote_id);
               const kgLiquido = kgLiquidoRegistro(r);
-              const custo = lote ? kgLiquido * custoMedioPorKgDieta(todasFormulacoes, lote.id) : 0;
+              const custo = lote ? custoRegistro(r, lote.id) : 0;
               return (
                 <tr key={r.id} className="border-b border-gray-50">
                   <td className="py-2">{new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR")}</td>
