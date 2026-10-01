@@ -1,21 +1,23 @@
 import { createClient } from "@/lib/supabase/server";
-import { Lote, Formulacao } from "@/lib/types";
+import { Lote, Formulacao, FaseAdaptacao } from "@/lib/types";
 import { numeroAnimaisAtual, custoMedioPorKgDieta, custoVolumosoPorKg, custoRegistroCocho, previstoAdaptacaoHoje, diasConfinamento, formatBRL } from "@/lib/calculations";
-import { NovoRegistroCochoForm, ExcluirCochoBotao } from "./CochoClient";
+import { NovoRegistroCochoForm, ExcluirCochoBotao, FasesAdaptacaoBotao } from "./CochoClient";
 
 const NOME_TRATO: Record<number, string> = { 1: "1º Trato", 2: "2º Trato", 3: "3º Trato" };
 
 export default async function CochoPage() {
   const supabase = createClient();
-  const [{ data: lotes }, { data: formulacoes }, { data: registros }] = await Promise.all([
+  const [{ data: lotes }, { data: formulacoes }, { data: registros }, { data: fases }] = await Promise.all([
     supabase.from("lotes").select("*"),
     supabase.from("formulacoes").select("*, produtos(*)"),
     supabase.from("cocho_registros").select("*, lotes(nome)").order("data", { ascending: false }).order("trato_numero"),
+    supabase.from("fases_adaptacao").select("*").order("ordem"),
   ]);
 
   const todosLotes = (lotes ?? []) as Lote[];
   const todasFormulacoes = (formulacoes ?? []) as Formulacao[];
   const todosRegistros = (registros ?? []) as any[];
+  const todasFases = (fases ?? []) as FaseAdaptacao[];
   const lotesAtivos = todosLotes.filter((l) => l.status === "Ativo");
   const loteById = new Map(todosLotes.map((l) => [l.id, l]));
 
@@ -25,6 +27,7 @@ export default async function CochoPage() {
 
   const resumoPorLote = lotesAtivos.map((lote) => {
     const registrosDoLote = todosRegistros.filter((r) => r.lote_id === lote.id);
+    const fasesDoLote = todasFases.filter((f) => f.lote_id === lote.id);
     const kgLiquido = registrosDoLote.reduce((s, r) => s + kgLiquidoRegistro(r), 0);
     const custoTotal = registrosDoLote.reduce((s, r) => s + custoRegistro(r, lote.id), 0);
     const custoRacaoKg = custoMedioPorKgDieta(todasFormulacoes, lote.id);
@@ -33,9 +36,9 @@ export default async function CochoPage() {
     const mediaDiariaKg = diasDistintos > 0 ? kgLiquido / diasDistintos : 0;
 
     const dias = diasConfinamento(lote);
-    const adaptacao = previstoAdaptacaoHoje(lote);
-    // nos primeiros 15 dias, o previsto vem da fase de adaptação (% do peso vivo);
-    // depois disso, vem da dieta fixa aprovada em Formulação
+    const adaptacao = previstoAdaptacaoHoje(lote, fasesDoLote);
+    // enquanto o lote estiver dentro de alguma fase cadastrada, o previsto vem dali;
+    // depois da última fase (ou se não tiver nenhuma cadastrada), vem da dieta fixa aprovada
     const previstoKgDiaFormulacao = numeroAnimaisAtual(lote) * (
       todasFormulacoes
         .filter((f) => f.lote_id === lote.id && f.status === "Aprovado")
@@ -45,8 +48,8 @@ export default async function CochoPage() {
     const previstoKgDia = adaptacao.emAdaptacao ? previstoKgDiaAdaptacao : previstoKgDiaFormulacao;
 
     return {
-      lote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos,
-      dias, emAdaptacao: adaptacao.emAdaptacao, periodo: adaptacao.periodo,
+      lote, fasesDoLote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos,
+      dias, emAdaptacao: adaptacao.emAdaptacao, fase: adaptacao.fase, diaDaFase: adaptacao.diaDaFase,
       previstoRacaoAdaptacao: numeroAnimaisAtual(lote) * adaptacao.racaoKg,
       previstoVolumosoAdaptacao: numeroAnimaisAtual(lote) * adaptacao.volumosoKg,
     };
@@ -69,23 +72,26 @@ export default async function CochoPage() {
         <p className="text-sm text-gray-400 mb-8">Nenhum lote ativo.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {resumoPorLote.map(({ lote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos, dias, emAdaptacao, periodo, previstoRacaoAdaptacao, previstoVolumosoAdaptacao }) => (
+          {resumoPorLote.map(({ lote, fasesDoLote, kgLiquido, custoTotal, custoRacaoKg, custoVolKg, mediaDiariaKg, previstoKgDia, diasDistintos, dias, emAdaptacao, fase, diaDaFase, previstoRacaoAdaptacao, previstoVolumosoAdaptacao }) => (
             <div key={lote.id} className="card">
               <div className="flex justify-between items-start">
                 <span className="font-bold text-gray-800">{lote.nome}</span>
                 <span className="badge-ativo">ATIVO</span>
               </div>
-              {emAdaptacao && (
+              {emAdaptacao && fase && (
                 <div className="mt-2 mb-1 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
                   <p className="text-xs font-semibold text-amber-800">
-                    🌱 Fase de adaptação — dia {dias} (período {periodo.diaIni}
-                    {periodo.diaFim === Infinity ? "+" : `-${periodo.diaFim}`})
+                    🌱 {fase.ordem}ª fase de adaptação — dia {diaDaFase} de {fase.dias_duracao} (dia {dias} de confinamento)
                   </p>
                   <p className="text-xs text-amber-700 mt-0.5">
                     Previsto hoje: {previstoRacaoAdaptacao.toFixed(1)} kg ração + {previstoVolumosoAdaptacao.toFixed(1)} kg volumoso
-                    {" "}({periodo.pctRacao}% + {periodo.pctVolumoso}% do peso vivo)
                   </p>
                 </div>
+              )}
+              {!emAdaptacao && fasesDoLote.length === 0 && (
+                <p className="text-xs text-gray-400 mt-2 mb-1">
+                  Nenhuma fase de adaptação cadastrada — usando direto a dieta fixa de Formulação.
+                </p>
               )}
               <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
                 <div>
@@ -117,6 +123,7 @@ export default async function CochoPage() {
                     : "✓ Dentro do previsto"}
                 </p>
               )}
+              <FasesAdaptacaoBotao loteId={lote.id} loteNome={lote.nome} fases={fasesDoLote} />
             </div>
           ))}
         </div>

@@ -88,3 +88,14 @@ export type CochoRegistro = {
   observacao: string | null;
   created_at: string;
 };
+
+export type FaseAdaptacao = {
+  id: string;
+  user_id: string;
+  lote_id: string;
+  ordem: number;
+  dias_duracao: number;
+  racao_kg: number;
+  volumoso_kg: number;
+  created_at: string;
+};

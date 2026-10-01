@@ -46,3 +46,36 @@ export async function excluirCocho(id: string) {
   revalidatePath("/cocho");
   revalidatePath("/dashboard");
 }
+
+/** Adiciona uma nova fase de adaptação ao final da lista do lote (kg direto, não %). */
+export async function criarFaseAdaptacao(loteId: string, diasDuracao: number, racaoKg: number, volumosoKg: number) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Não autenticado");
+
+  const { data: existentes } = await supabase
+    .from("fases_adaptacao")
+    .select("ordem")
+    .eq("lote_id", loteId)
+    .order("ordem", { ascending: false })
+    .limit(1);
+  const proximaOrdem = (existentes?.[0]?.ordem ?? 0) + 1;
+
+  const { error } = await supabase.from("fases_adaptacao").insert({
+    user_id: user.id,
+    lote_id: loteId,
+    ordem: proximaOrdem,
+    dias_duracao: diasDuracao,
+    racao_kg: racaoKg,
+    volumoso_kg: volumosoKg,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/cocho");
+}
+
+export async function excluirFaseAdaptacao(id: string) {
+  const supabase = createClient();
+  const { error } = await supabase.from("fases_adaptacao").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/cocho");
+}

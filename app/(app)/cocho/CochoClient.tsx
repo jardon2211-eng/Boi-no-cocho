@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { registrarTratosDoDia, excluirCocho, TratoInput } from "./actions";
-import { Lote } from "@/lib/types";
+import { registrarTratosDoDia, excluirCocho, criarFaseAdaptacao, excluirFaseAdaptacao, TratoInput } from "./actions";
+import { Lote, FaseAdaptacao } from "@/lib/types";
 
 const TRATOS_PADRAO: TratoInput[] = [
   { trato_numero: 1, horario: "07:00", racao_kg: 0, volumoso_kg: 0, sobrou: false, sobra_kg: 0 },
@@ -155,5 +155,101 @@ export function ExcluirCochoBotao({ id }: { id: string }) {
     <form action={excluirCocho.bind(null, id)}>
       <button className="text-red-500 hover:underline text-xs">excluir</button>
     </form>
+  );
+}
+
+export function FasesAdaptacaoBotao({ loteId, loteNome, fases }: { loteId: string; loteNome: string; fases: FaseAdaptacao[] }) {
+  const [open, setOpen] = useState(false);
+  const [dias, setDias] = useState(3);
+  const [racaoKg, setRacaoKg] = useState(0);
+  const [volumosoKg, setVolumosoKg] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const ordenadas = [...fases].sort((a, b) => a.ordem - b.ordem);
+
+  async function handleAdicionar() {
+    setLoading(true);
+    try {
+      await criarFaseAdaptacao(loteId, dias, racaoKg, volumosoKg);
+      setDias(3); setRacaoKg(0); setVolumosoKg(0);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="w-full text-center text-xs font-medium text-brand-600 hover:underline mt-2">
+        ⚙️ Configurar fases de adaptação
+      </button>
+      {open && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="font-bold text-gray-800 mb-1">Fases de Adaptação — {loteNome}</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Cadastre em ordem: quantos dias cada fase dura, e quanto de ração e volumoso dar por dia
+              nela. Depois da última fase, o sistema passa a usar a dieta fixa de Formulação.
+            </p>
+
+            {ordenadas.length > 0 && (
+              <table className="w-full text-sm mb-4">
+                <thead>
+                  <tr className="text-left text-gray-400 border-b border-gray-100">
+                    <th className="py-1 font-medium">Fase</th>
+                    <th className="py-1 font-medium">Dias</th>
+                    <th className="py-1 font-medium">Ração</th>
+                    <th className="py-1 font-medium">Volumoso</th>
+                    <th className="py-1"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ordenadas.map((f) => (
+                    <tr key={f.id} className="border-b border-gray-50">
+                      <td className="py-1">{f.ordem}ª</td>
+                      <td className="py-1">{f.dias_duracao}d</td>
+                      <td className="py-1">{f.racao_kg} kg</td>
+                      <td className="py-1">{f.volumoso_kg} kg</td>
+                      <td className="py-1">
+                        <form action={excluirFaseAdaptacao.bind(null, f.id)}>
+                          <button className="text-red-500 hover:underline text-xs">excluir</button>
+                        </form>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            <div className="border-t border-gray-100 pt-4">
+              <p className="text-xs font-semibold text-gray-600 mb-2">
+                Adicionar {ordenadas.length + 1}ª fase
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="label-field">Dias</label>
+                  <input type="number" min={1} className="input-field" value={dias || ""}
+                    onChange={(e) => setDias(parseInt(e.target.value) || 1)} />
+                </div>
+                <div>
+                  <label className="label-field">Ração (kg)</label>
+                  <input type="number" step="0.1" min={0} className="input-field" value={racaoKg || ""}
+                    onChange={(e) => setRacaoKg(parseFloat(e.target.value) || 0)} />
+                </div>
+                <div>
+                  <label className="label-field">Volumoso (kg)</label>
+                  <input type="number" step="0.1" min={0} className="input-field" value={volumosoKg || ""}
+                    onChange={(e) => setVolumosoKg(parseFloat(e.target.value) || 0)} />
+                </div>
+              </div>
+              <button type="button" disabled={loading} onClick={handleAdicionar} className="btn-primary w-full mt-3 text-sm">
+                {loading ? "Salvando..." : "+ Adicionar fase"}
+              </button>
+            </div>
+
+            <button type="button" onClick={() => setOpen(false)} className="btn-secondary w-full mt-4">Fechar</button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

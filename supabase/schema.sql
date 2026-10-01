@@ -81,6 +81,22 @@ create table if not exists estoque_movimentos (
   created_at timestamptz not null default now()
 );
 
+-- ---------- FASES DE ADAPTAÇÃO (editáveis por lote, em kg direto) ----------
+-- Substitui qualquer tabela fixa de % — cada produtor ajusta do seu jeito.
+-- A ordem define a sequência (fase 1, fase 2...), cada uma dura "dias_duracao"
+-- dias, contados a partir da data de entrada do lote. Depois da última fase
+-- cadastrada, o sistema passa a usar a dieta fixa aprovada em Formulação.
+create table if not exists fases_adaptacao (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  lote_id uuid not null references lotes(id) on delete cascade,
+  ordem int not null,
+  dias_duracao int not null check (dias_duracao > 0),
+  racao_kg numeric not null default 0,
+  volumoso_kg numeric not null default 0,
+  created_at timestamptz not null default now()
+);
+
 -- ---------- DESPESAS ----------
 create table if not exists despesas (
   id uuid primary key default gen_random_uuid(),
@@ -123,6 +139,7 @@ alter table formulacoes enable row level security;
 alter table estoque_movimentos enable row level security;
 alter table despesas enable row level security;
 alter table cocho_registros enable row level security;
+alter table fases_adaptacao enable row level security;
 
 create policy "lotes_isolamento" on lotes for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -136,6 +153,8 @@ create policy "despesas_isolamento" on despesas for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "cocho_isolamento" on cocho_registros for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "fases_adaptacao_isolamento" on fases_adaptacao for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- índices úteis
 create index if not exists idx_lotes_user on lotes(user_id);
@@ -144,3 +163,4 @@ create index if not exists idx_formulacoes_lote on formulacoes(lote_id);
 create index if not exists idx_estoque_produto on estoque_movimentos(produto_id);
 create index if not exists idx_despesas_lote on despesas(lote_id);
 create index if not exists idx_cocho_lote on cocho_registros(lote_id);
+create index if not exists idx_fases_adaptacao_lote on fases_adaptacao(lote_id);
