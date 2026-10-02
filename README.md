@@ -149,12 +149,13 @@ arquivos em `public/icons/`.
 - O produto é vendido por **pagamento único de R$ 49,90** — não é assinatura.
   A tela `/signup` não cria mais conta grátis: ela só mostra o preço e manda
   a pessoa pra `/comprar`.
-- Em `/comprar`, a pessoa paga pelo Mercado Pago (Pix, cartão ou boleto).
-  Isso não exige que ela already tenha conta.
-- Quando o Mercado Pago confirma o pagamento, ele avisa o seu site através
-  de um **webhook** (`/api/webhooks/mercadopago`). O servidor então:
-  1. confirma de verdade o pagamento na API do Mercado Pago (nunca confia
-     só no aviso recebido);
+- Em `/comprar`, a pessoa paga pelo PagBank (Pix, cartão ou boleto), usando um
+  link de pagamento fixo. Isso não exige que ela já tenha conta.
+- Quando o PagBank confirma o pagamento, ele avisa o seu site através
+  de um **webhook** (`/api/webhooks/pagbank`). O servidor então:
+  1. confere a assinatura da notificação (um código calculado com o seu
+     token de integração) pra garantir que o aviso é mesmo do PagBank,
+     e não de alguém tentando forjar uma notificação falsa;
   2. cria a conta da pessoa no Supabase automaticamente, usando o e-mail
      que ela informou no pagamento;
   3. o Supabase manda um e-mail de convite pra esse endereço, com um link;
@@ -170,56 +171,80 @@ arquivos em `public/icons/`.
 
 ---
 
-## 6.1 Configurar a cobrança (Mercado Pago)
+## 6.1 Configurar a cobrança (PagBank)
 
-**No Mercado Pago:**
+**Pegar o Token de Integração:**
 
-1. Crie uma conta em [mercadopago.com.br](https://www.mercadopago.com.br)
-   (ou use a que já tiver).
-2. Vá em **Seu negócio → Configurações → Credenciais de produção**
-   (ou acesse [mercadopago.com.br/developers/panel](https://www.mercadopago.com.br/developers/panel)).
-3. Copie o **Access Token de produção** (começa com `APP_USR-...`).
+1. Acesse sua conta em [pagbank.com.br](https://pagbank.com.br).
+2. Vá em **Minha Conta → Token de Segurança** (ou **Integrações**, o caminho
+   exato varia um pouco conforme a versão do painel).
+3. Gere (ou copie, se já tiver) o **Token de Integração**. ⚠️ Se você gerar
+   um token novo, o antigo para de funcionar — não gere de novo depois de
+   configurar, a menos que precise trocar.
 
-**No projeto:**
+**Criar o link de pagamento fixo (uma vez só):**
 
-4. Cole esse valor na variável `MP_ACCESS_TOKEN` (no `.env.local` pra testar
-   local, e nas Environment Variables do projeto na Vercel pra valer).
-5. Confirme que `NEXT_PUBLIC_SITE_URL` está com o endereço certo do seu site
-   publicado (sem barra no final) — é usado pra montar os links de volta do
-   pagamento e o endereço do webhook.
+4. No painel do PagBank, procure por **Cobrar → Link de Pagamento** (ou
+   "Vender" → "Link de Pagamento").
+5. Preencha: Nome do produto = "Boi no Cocho — Acesso Vitalício", Valor =
+   **49,90**, pagamento único (não recorrente), deixe o cliente escolher
+   Pix, cartão ou boleto.
+6. Salve e copie a **URL do link** gerada (algo como `pag.ae/xxxxx`).
+
+**Criar o Webhook (pra avisar seu site quando alguém pagar):**
+
+7. No painel do PagBank, procure por **Integrações → Webhooks** (ou
+   "Notificações").
+8. Cadastre a URL: `https://SEU-SITE/api/webhooks/pagbank` (troque pelo
+   endereço real do seu site publicado).
+9. O PagBank usa o próprio Token de Integração (passo 3) pra assinar as
+   notificações — não precisa gerar outro token separado pra isso.
+
+**No projeto, preencha estas variáveis** (`.env.local` pra testar local, e
+nas Environment Variables da Vercel pra valer):
+
+10. `PAGBANK_TOKEN` = o token de integração do passo 3.
+11. `NEXT_PUBLIC_PAGBANK_PAYMENT_LINK` = a URL do link de pagamento do passo 6.
+12. Confirme que `NEXT_PUBLIC_SITE_URL` está com o endereço certo do seu site
+    publicado (sem barra no final).
 
 **Bloquear cadastro grátis (passo manual e importante):**
 
-6. No painel do Supabase, vá em **Authentication → Settings**.
-7. Desative a opção **"Allow new users to sign up"** (ou "Enable sign ups",
-   o nome exato varia um pouco por versão do painel).
-8. Isso bloqueia qualquer criação de conta nova por fora do fluxo de
-   pagamento — inclusive pelo botão "Continuar com Google". A criação de
-   conta feita pelo webhook (com a chave de administrador) continua
-   funcionando normalmente, porque ela não passa por essa restrição.
+13. No painel do Supabase, vá em **Authentication → Settings**.
+14. Desative a opção **"Allow new users to sign up"** (ou "Enable sign ups",
+    o nome exato varia um pouco por versão do painel).
+15. Isso bloqueia qualquer criação de conta nova por fora do fluxo de
+    pagamento — inclusive pelo botão "Continuar com Google". A criação de
+    conta feita pelo webhook (com a chave de administrador) continua
+    funcionando normalmente, porque ela não passa por essa restrição.
 
 **Chave de administrador do Supabase:**
 
-9. No painel do Supabase, vá em **Project Settings → API**.
-10. Copie a chave em **service_role** (⚠️ nunca compartilhe essa chave, ela
+16. No painel do Supabase, vá em **Project Settings → API**.
+17. Copie a chave em **service_role** (⚠️ nunca compartilhe essa chave, ela
     tem acesso total ao banco, ignorando as travas de segurança).
-11. Cole em `SUPABASE_SERVICE_ROLE_KEY` (`.env.local` local, e nas
+18. Cole em `SUPABASE_SERVICE_ROLE_KEY` (`.env.local` local, e nas
     Environment Variables da Vercel — marque como variável **sensível/secreta**
     se o painel oferecer essa opção).
 
 **Personalizar o e-mail de convite (opcional, recomendado):**
 
-12. No painel do Supabase, vá em **Authentication → Email Templates → Invite user**.
-13. Edite o texto/assunto pra ter a cara do Boi no Cocho, já que é o
+19. No painel do Supabase, vá em **Authentication → Email Templates → Invite user**.
+20. Edite o texto/assunto pra ter a cara do Boi no Cocho, já que é o
     e-mail que a pessoa recebe depois de pagar.
 
 **Testar de ponta a ponta:**
 
-14. Acesse `/comprar` no seu site publicado, faça um pagamento de teste
-    (o Mercado Pago tem [cartões de teste](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/additional-content/your-integrations/test/cards)
-    pra isso em ambiente de sandbox — pra testar de verdade em produção,
-    pode ser mais simples fazer um Pix pequeno de verdade pra si mesmo).
-15. Confirme que o e-mail de convite chegou e que o login funciona depois
+21. Acesse `/comprar` no seu site publicado, clique em pagar, e faça um
+    pagamento de teste (o jeito mais simples de testar de verdade é fazer
+    um Pix pequeno pra si mesmo).
+22. ⚠️ **O formato exato da notificação do PagBank pode variar um pouco.**
+    Depois do primeiro pagamento de teste, se a conta não for criada
+    automaticamente, veja os logs da função na Vercel (aba Logs do projeto)
+    pra conferir o payload real que chegou, e me manda que eu ajusto o
+    código do webhook pra bater certinho com o formato que o PagBank
+    realmente está enviando pra sua conta.
+23. Confirme que o e-mail de convite chegou e que o login funciona depois
     de definir a senha.
 
 ---
@@ -236,10 +261,6 @@ arquivos em `public/icons/`.
   biblioteca de geração de PDF no servidor.
 - **App mobile**: hoje é um site responsivo (funciona bem no celular pelo
   navegador), não um aplicativo de loja (App Store/Play Store).
-- **Verificação de assinatura do webhook do Mercado Pago**: hoje o servidor
-  confirma o pagamento re-consultando a API do Mercado Pago (seguro), mas
-  não confere a assinatura criptográfica do aviso em si. Dá pra reforçar
-  depois seguindo a [documentação de segurança de webhooks](https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks) deles.
 
 ---
 
@@ -249,13 +270,13 @@ arquivos em `public/icons/`.
 app/
   login/            → tela de login
   signup/           → agora só mostra o preço e manda pra /comprar
-  comprar/          → página de pagamento único (Mercado Pago)
-    sucesso/        → retorno de pagamento aprovado/pendente
-    erro/           → retorno de pagamento recusado
+  comprar/          → página de pagamento único (link fixo do PagBank)
+    sucesso/        → tela opcional pra configurar como redirecionamento do PagBank após pagar
+    erro/           → idem, pra pagamento recusado/pendente
   definir-senha/    → onde a pessoa cai depois de clicar no e-mail de convite
   api/
     webhooks/
-      mercadopago/  → recebe a confirmação de pagamento e cria a conta
+      pagbank/        → recebe a confirmação de pagamento e cria a conta
   (app)/            → área logada (protegida pelo middleware)
     dashboard/      → Visão Geral
     compras/        → Compras de Gado

@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
     path.startsWith("/auth");
 
   // rotas públicas: comprar (quem ainda não tem conta), definir senha (vem do e-mail),
-  // e a API (inclui o webhook do Mercado Pago — não tem usuário logado nem faz sentido redirecionar)
+  // e a API (inclui o webhook do PagBank — não tem usuário logado nem faz sentido redirecionar)
   const isPublicRoute = path.startsWith("/comprar") ||
     path.startsWith("/definir-senha") ||
     path.startsWith("/api");

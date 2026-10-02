@@ -8,7 +8,7 @@ export default function SucessoPage() {
           Em alguns instantes você vai receber um e-mail com o link pra criar sua senha e acessar o
           Boi no Cocho. Não esqueça de checar a caixa de spam/lixo eletrônico.
         </p>
-        <p className="text-xs text-gray-400">O e-mail é enviado assim que o Mercado Pago confirmar o pagamento.</p>
+        <p className="text-xs text-gray-400">O e-mail é enviado assim que o PagBank confirmar o pagamento.</p>
       </div>
     </div>
   );

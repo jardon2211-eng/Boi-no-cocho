@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { iniciarPagamento } from "./actions";
 
 export default function ComprarPage() {
+  const linkPagamento = process.env.NEXT_PUBLIC_PAGBANK_PAYMENT_LINK;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-50 to-white px-4">
       <div className="w-full max-w-md">
@@ -25,14 +26,18 @@ export default function ComprarPage() {
             <li>✓ Funciona no computador e no celular</li>
           </ul>
 
-          <form action={iniciarPagamento}>
-            <button type="submit" className="btn-primary w-full">
-              Pagar com Mercado Pago — R$ 49,90
-            </button>
-          </form>
+          {linkPagamento ? (
+            <a href={linkPagamento} className="btn-primary w-full block text-center">
+              Pagar com PagBank (Pix, cartão ou boleto) — R$ 49,90
+            </a>
+          ) : (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-3">
+              O pagamento ainda está sendo configurado. Volte em instantes.
+            </p>
+          )}
 
           <p className="text-xs text-center text-gray-400">
-            Pagamento processado com segurança pelo Mercado Pago (Pix, cartão ou boleto).
+            Pagamento processado com segurança pelo PagBank.
           </p>
         </div>
 
