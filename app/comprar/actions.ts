@@ -22,7 +22,7 @@ export async function iniciarPagamento() {
           title: "Boi no Cocho — Acesso Vitalício",
           description: "Gestão completa de confinamento, pagamento único",
           quantity: 1,
-          unit_price: 49.9,
+          unit_price: 64.9,
           currency_id: "BRL",
         },
       ],

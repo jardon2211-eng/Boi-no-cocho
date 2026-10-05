@@ -17,7 +17,6 @@ export async function POST(request: Request) {
       url.searchParams.get("id");
 
     if (!paymentId) {
-      // notificação de outro tipo (ex: teste) — nada a fazer, só confirma o recebimento
       return NextResponse.json({ ok: true });
     }
 
@@ -53,12 +52,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Erro no webhook do Mercado Pago:", err);
-    // sempre responde 200 pro Mercado Pago não ficar retentando indefinidamente por erro nosso
     return NextResponse.json({ ok: true });
   }
 }
 
-// o Mercado Pago também pode enviar um GET de verificação
 export async function GET() {
   return NextResponse.json({ ok: true });
 }
