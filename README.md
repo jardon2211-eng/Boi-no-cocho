@@ -146,7 +146,7 @@ arquivos em `public/icons/`.
 
 ## 6. Como funciona a venda (pagamento único + conta automática)
 
-- O produto é vendido por **pagamento único de R$ 49,90** — não é assinatura.
+- O produto é vendido por **pagamento único de R$ 64,90** — não é assinatura.
   A tela `/signup` não cria mais conta grátis: ela só mostra o preço e manda
   a pessoa pra `/comprar`.
 - Em `/comprar`, a pessoa paga pelo PagBank (Pix, cartão ou boleto), usando um
@@ -187,7 +187,7 @@ arquivos em `public/icons/`.
 4. No painel do PagBank, procure por **Cobrar → Link de Pagamento** (ou
    "Vender" → "Link de Pagamento").
 5. Preencha: Nome do produto = "Boi no Cocho — Acesso Vitalício", Valor =
-   **49,90**, pagamento único (não recorrente), deixe o cliente escolher
+   **64,90**, pagamento único (não recorrente), deixe o cliente escolher
    Pix, cartão ou boleto.
 6. Salve e copie a **URL do link** gerada (algo como `pag.ae/xxxxx`).
 

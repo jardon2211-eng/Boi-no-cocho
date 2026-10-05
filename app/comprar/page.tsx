@@ -15,7 +15,7 @@ export default function ComprarPage() {
         <div className="card space-y-5">
           <div className="text-center">
             <p className="text-sm text-gray-500">Pagamento único</p>
-            <p className="text-4xl font-bold text-brand-700 mt-1">R$ 49,90</p>
+            <p className="text-4xl font-bold text-brand-700 mt-1">R$ 64,90</p>
             <p className="text-sm text-gray-500 mt-1">Acesso vitalício — sem mensalidade</p>
           </div>
 
@@ -28,7 +28,7 @@ export default function ComprarPage() {
 
           {linkPagamento ? (
             <a href={linkPagamento} className="btn-primary w-full block text-center">
-              Pagar com PagBank (Pix, cartão ou boleto) — R$ 49,90
+              Pagar com PagBank (Pix, cartão ou boleto) — R$ 64,90
             </a>
           ) : (
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-3">

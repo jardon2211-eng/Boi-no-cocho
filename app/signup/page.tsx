@@ -10,11 +10,11 @@ export default function SignupPage() {
 
         <div className="card space-y-4">
           <p className="text-sm text-gray-600">
-            O Boi no Cocho é vendido por pagamento único de <strong>R$ 49,90</strong> — acesso vitalício,
+            O Boi no Cocho é vendido por pagamento único de <strong>R$ 64,90</strong> — acesso vitalício,
             sem mensalidade. Depois de pagar, você recebe por e-mail o link pra criar sua senha e entrar.
           </p>
           <Link href="/comprar" className="btn-primary w-full block text-center">
-            Comprar agora — R$ 49,90
+            Comprar agora — R$ 64,90
           </Link>
         </div>
 
