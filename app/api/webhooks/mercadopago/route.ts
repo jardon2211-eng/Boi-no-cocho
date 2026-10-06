@@ -36,8 +36,27 @@ export async function POST(request: Request) {
     const payment = await mpResp.json();
 
     if (payment.status === "approved") {
-      const email: string | undefined = payment.payer?.email;
-      if (email) {
+      // O e-mail do comprador é gravado por nós em external_reference na hora
+      // de criar a preferência (app/comprar/actions.ts). payment.payer?.email
+      // NÃO é confiável: para alguns meios de pagamento (ex.: transferência
+      // bancária/Pix com CNPJ) o Mercado Pago devolve esse campo mascarado,
+      // tipo "XXXXXXXXXXX", em vez do e-mail real.
+      const emailValidoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const candidatos = [payment.external_reference, payment.payer?.email];
+      const email = candidatos.find(
+        (c): c is string => typeof c === "string" && emailValidoRegex.test(c.trim())
+      )?.trim().toLowerCase();
+
+      if (!email) {
+        console.error(
+          "Pagamento aprovado mas sem e-mail válido para criar acesso. payment_id:",
+          paymentId,
+          "external_reference:",
+          payment.external_reference,
+          "payer.email:",
+          payment.payer?.email
+        );
+      } else {
         const admin = createAdminClient();
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
         const { error } = await admin.auth.admin.inviteUserByEmail(email, {

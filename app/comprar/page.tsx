@@ -25,7 +25,23 @@ export default function ComprarPage() {
             <li>✓ Funciona no computador e no celular</li>
           </ul>
 
-          <form action={iniciarPagamento}>
+          <form action={iniciarPagamento} className="space-y-3">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Seu e-mail
+              </label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                required
+                placeholder="voce@exemplo.com"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                É pra esse e-mail que enviamos o acesso após o pagamento.
+              </p>
+            </div>
             <button type="submit" className="btn-primary w-full">
               Pagar com Mercado Pago — R$ 64,90
             </button>

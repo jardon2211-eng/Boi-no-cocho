@@ -2,12 +2,18 @@
 
 import { redirect } from "next/navigation";
 
-export async function iniciarPagamento() {
+export async function iniciarPagamento(formData: FormData) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const accessToken = process.env.MP_ACCESS_TOKEN;
 
   if (!accessToken) {
     throw new Error("MP_ACCESS_TOKEN não configurado. Veja o README para configurar o Mercado Pago.");
+  }
+
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!emailValido) {
+    throw new Error("Informe um e-mail válido para receber o acesso.");
   }
 
   const resp = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -26,6 +32,14 @@ export async function iniciarPagamento() {
           currency_id: "BRL",
         },
       ],
+      payer: {
+        email,
+      },
+      // Fonte confiável do e-mail do comprador: o campo payer.email que volta
+      // na consulta do pagamento pode vir mascarado ("XXXXXXXXXXX") dependendo
+      // do meio de pagamento (ex.: transferência bancária/Pix com CNPJ). Por
+      // isso guardamos o e-mail digitado aqui e o webhook usa este campo.
+      external_reference: email,
       back_urls: {
         success: `${siteUrl}/comprar/sucesso`,
         failure: `${siteUrl}/comprar/erro`,
