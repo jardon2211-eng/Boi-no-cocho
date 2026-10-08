@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const MENU = [
   { href: "/dashboard", label: "Visão Geral", icon: "▦" },
@@ -63,7 +64,8 @@ export default function Sidebar() {
 
   function LogoutButton() {
     return (
-      <div className="p-3 border-t border-gray-100">
+      <div className="p-3 border-t border-gray-100 space-y-1">
+        <ThemeToggle />
         <button
           onClick={handleLogout}
           className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700"
@@ -79,7 +81,10 @@ export default function Sidebar() {
       {/* Barra superior — só aparece no celular/tablet estreito */}
       <div className="md:hidden sticky top-0 z-30 bg-brand-700 text-white flex items-center justify-between px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
         <span className="font-bold flex items-center gap-2">🐂 Boi no Cocho</span>
-        <button onClick={() => setOpen(true)} aria-label="Abrir menu" className="text-2xl leading-none px-1">☰</button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle compact />
+          <button onClick={() => setOpen(true)} aria-label="Abrir menu" className="text-2xl leading-none px-1">☰</button>
+        </div>
       </div>
 
       {/* Menu lateral fixo — telas médias/grandes */}

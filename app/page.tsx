@@ -12,7 +12,7 @@ const HAIRLINE = "#e2dac2";
 
 export default function HomePage() {
   return (
-    <main style={{ backgroundColor: CREAM, color: INK }}>
+    <main className="light-only" style={{ backgroundColor: CREAM, color: INK }}>
       <SiteHeader />
       <Hero />
       <PainSection />

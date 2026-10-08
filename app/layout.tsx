@@ -28,9 +28,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const TEMA_SCRIPT = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="sol"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}if(t!=="light"){document.documentElement.classList.add(t)}}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: TEMA_SCRIPT }} />
+      </head>
       <body className="antialiased">
         {children}
         <RegisterSW />
