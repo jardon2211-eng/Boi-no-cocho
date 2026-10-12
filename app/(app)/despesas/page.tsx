@@ -26,7 +26,7 @@ export default async function DespesasPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex flex-wrap justify-between items-start gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-brand-700">💵 Despesas</h1>
           <p className="text-gray-500 text-sm mt-1">Controle de custos fixos e variáveis</p>

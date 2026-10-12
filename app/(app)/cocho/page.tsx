@@ -57,7 +57,7 @@ export default async function CochoPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex flex-wrap justify-between items-start gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-brand-700">🌾 Ração no Cocho</h1>
           <p className="text-gray-500 text-sm mt-1">

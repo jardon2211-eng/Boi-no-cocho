@@ -27,7 +27,7 @@ export default async function EstoquePage() {
 
   return (
     <div>
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex flex-wrap justify-between items-start gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-brand-700">📦 Estoque de Ração</h1>
           <p className="text-gray-500 text-sm mt-1">Entradas, saídas e saldo atual por produto</p>
