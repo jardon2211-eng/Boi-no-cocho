@@ -1,7 +1,9 @@
+import Track from "@/components/Track";
 export default function SucessoPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-50 to-white px-4">
       <div className="card max-w-md text-center space-y-3">
+        <Track pagina="sucesso" />
         <div className="text-4xl">✅</div>
         <h1 className="text-xl font-bold text-brand-700">Pagamento recebido!</h1>
         <p className="text-sm text-gray-600">

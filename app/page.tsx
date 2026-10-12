@@ -1,3 +1,4 @@
+import Track from "@/components/Track";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -13,6 +14,7 @@ const HAIRLINE = "#e2dac2";
 export default function HomePage() {
   return (
     <main className="light-only" style={{ backgroundColor: CREAM, color: INK }}>
+      <Track pagina="home" />
       <SiteHeader />
       <Hero />
       <PainSection />

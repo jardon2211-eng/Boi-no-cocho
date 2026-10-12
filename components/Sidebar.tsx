@@ -8,6 +8,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 const MENU = [
   { href: "/dashboard", label: "Visão Geral", icon: "▦" },
+  { href: "/adaptacao", label: "Adaptação", icon: "🌱", badge: "NOVO" },
   { href: "/compras", label: "Compras", icon: "🛒" },
   { href: "/formulacao", label: "Formulação", icon: "🧪" },
   { href: "/consumo", label: "Relatório Consumo", icon: "📊" },

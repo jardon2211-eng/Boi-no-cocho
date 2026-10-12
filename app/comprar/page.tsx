@@ -1,3 +1,4 @@
+import Track from "@/components/Track";
 import Link from "next/link";
 import { iniciarPagamento } from "./actions";
 
@@ -5,6 +6,7 @@ export default function ComprarPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-50 to-white px-4">
       <div className="w-full max-w-md">
+        <Track pagina="comprar" />
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">🐂</div>
           <h1 className="text-2xl font-bold text-brand-700">Boi no Cocho</h1>
