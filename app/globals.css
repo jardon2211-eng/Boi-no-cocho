@@ -135,3 +135,10 @@ html.dark .hover\:bg-purple-100:not(.light-only *):hover { background-color: rgb
 html.sol .text-brand-800:not(.light-only *) { color: #1a3a12; }
 html.sol .text-purple-600:not(.light-only *), html.sol .text-purple-700:not(.light-only *) { color: #5b21b6; }
 html.sol .border-brand-100:not(.light-only *) { border-color: #6b7280; }
+
+/* Proporção mobile/desktop: sem rolagem lateral na página e sem zoom automático do iPhone nos campos */
+html, body { overflow-x: hidden; }
+@media (max-width: 767px) {
+  .input-field, input, select, textarea { font-size: 16px; }
+  .btn-primary, .btn-secondary { min-height: 44px; }
+}

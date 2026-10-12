@@ -200,7 +200,8 @@ export function FasesAdaptacaoBotao({ loteId, loteNome, fases, pesoVivo }: { lot
             </p>
 
             {ordenadas.length > 0 && (
-              <table className="w-full text-sm mb-4">
+              <div className="overflow-x-auto">
+              <table className="min-w-[640px] w-full text-sm mb-4">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-100">
                     <th className="py-1 font-medium">Fase</th>
@@ -226,6 +227,7 @@ export function FasesAdaptacaoBotao({ loteId, loteNome, fases, pesoVivo }: { lot
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
 
             <div className="border-t border-gray-100 pt-4">

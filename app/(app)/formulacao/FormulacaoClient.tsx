@@ -85,7 +85,8 @@ export function NovoProdutoForm() {
 
 export function ProdutosTable({ produtos }: { produtos: Produto[] }) {
   return (
-    <table className="w-full text-sm">
+    <div className="overflow-x-auto">
+    <table className="min-w-[640px] w-full text-sm">
       <thead>
         <tr className="text-left text-gray-400 border-b border-gray-100">
           <th className="py-2 font-medium">Produto</th>
@@ -113,6 +114,7 @@ export function ProdutosTable({ produtos }: { produtos: Produto[] }) {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 
@@ -197,7 +199,8 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
         pela fase de adaptação (% do peso vivo) — não precisa configurar nada aqui pra isso.
       </p>
 
-      <table className="w-full text-sm mb-2">
+      <div className="overflow-x-auto">
+      <table className="min-w-[640px] w-full text-sm mb-2">
         <thead>
           <tr className="text-left text-gray-400 border-b border-gray-100">
             <th className="py-2 font-medium">Produto</th>
@@ -234,6 +237,7 @@ export function NovaDietaForm({ lotes, produtos }: { lotes: Lote[]; produtos: Pr
           })}
         </tbody>
       </table>
+      </div>
       <button type="button" onClick={adicionarItem} className="text-sm font-semibold text-brand-600 hover:underline mb-4">
         + Adicionar ingrediente
       </button>

@@ -52,7 +52,8 @@ export default async function DespesasPage() {
       {porLote.length > 0 && (
         <div className="card mb-6">
           <h2 className="font-bold text-gray-700 mb-3">Despesas por Lote</h2>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="min-w-[640px] w-full text-sm">
             <thead>
               <tr className="text-left text-gray-400 border-b border-gray-100">
                 <th className="py-2 font-medium">Lote</th>
@@ -78,12 +79,14 @@ export default async function DespesasPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       <div className="card">
         <h2 className="font-bold text-gray-700 mb-3">Histórico de Despesas</h2>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="min-w-[640px] w-full text-sm">
           <thead>
             <tr className="text-left text-gray-400 border-b border-gray-100">
               <th className="py-2 font-medium">Data</th>
@@ -115,6 +118,7 @@ export default async function DespesasPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

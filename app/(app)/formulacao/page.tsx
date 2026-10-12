@@ -80,6 +80,7 @@ export default async function FormulacaoPage() {
                       <ExcluirDietaBotao loteId={d.lote_id} data={d.data} />
                     </div>
                   </div>
+                  <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-gray-400">
@@ -98,6 +99,7 @@ export default async function FormulacaoPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                   <div className="flex justify-between text-sm mt-3 pt-2 border-t border-gray-50 text-gray-600 flex-wrap gap-2">
                     <span>Kg/dia ração: <strong>{d.kg_dia_total} kg</strong></span>
                     <span>Custo/kg ração: <strong>{formatBRL(custoKg)}</strong></span>

@@ -37,7 +37,8 @@ export default async function EstoquePage() {
 
       <div className="card mb-6">
         <h2 className="font-bold text-gray-700 mb-3">Saldo por Produto</h2>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="min-w-[640px] w-full text-sm">
           <thead>
             <tr className="text-left text-gray-400 border-b border-gray-100">
               <th className="py-2 font-medium">Produto</th>
@@ -65,11 +66,13 @@ export default async function EstoquePage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <div className="card">
         <h2 className="font-bold text-gray-700 mb-3">Movimentações</h2>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="min-w-[640px] w-full text-sm">
           <thead>
             <tr className="text-left text-gray-400 border-b border-gray-100">
               <th className="py-2 font-medium">Data</th>
@@ -97,6 +100,7 @@ export default async function EstoquePage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

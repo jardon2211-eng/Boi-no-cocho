@@ -37,10 +37,12 @@ function imprimirPDF(titulo: string, linhas: (string | number)[][]) {
       <body>
         <h1>🐂 Boi no Cocho — ${titulo}</h1>
         <p style="color:#888; font-size:12px;">Gerado em ${new Date().toLocaleString("pt-BR")}</p>
+        <div className="overflow-x-auto">
         <table>
           <thead><tr>${cabecalho.map((c) => `<th>${c}</th>`).join("")}</tr></thead>
           <tbody>${corpo.map((linha) => `<tr>${linha.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>
         </table>
+        </div>
       </body>
     </html>
   `);
