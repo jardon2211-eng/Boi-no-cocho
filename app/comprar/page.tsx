@@ -51,8 +51,8 @@ export default function ComprarPage({
             </p>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-extrabold" style={{ color: DARK }}>
+          <div className="flex flex-wrap items-baseline gap-x-3">
+            <span className="whitespace-nowrap text-5xl font-extrabold" style={{ color: DARK }}>
               R$ 64,90
             </span>
             <span className="text-sm" style={{ color: MUTED }}>
