@@ -1,30 +1,66 @@
 import Track from "@/components/Track";
 import Link from "next/link";
-import type { ReactNode } from "react";
 
-const DARK = "#182619";
-const DARK_2 = "#2a3d20";
-const CREAM = "#f7f2e7";
-const INK = "#20291b";
-const BRAND = "#2e4c2e";
-const RUST = "#a85a2e";
-const MUTED = "#5b6454";
-const HAIRLINE = "#e2dac2";
+const DARK = "#12281a";
+const PAPER = "#f6f7f1";
+const INK = "#1a2419";
+const MUTED = "#4a5547";
+const BORDER = "#cfd6c8";
+const HAY = "#f2b01e";
+const SOFT = "#eef2e8";
+
+const FASES = [
+  { n: 1, dias: "1 a 3", racao: "1,05", vol: "10,50", racaoTrato: "7,0", volTrato: "70,0", hoje: false, travada: false },
+  { n: 2, dias: "4 a 6", racao: "2,80", vol: "8,75", racaoTrato: "18,7", volTrato: "58,3", hoje: true, travada: false },
+  { n: 3, dias: "7 a 9", racao: "4,55", vol: "7,00", racaoTrato: "30,3", volTrato: "46,7", hoje: false, travada: true },
+  { n: 4, dias: "10 a 12", racao: "6,30", vol: "5,25", racaoTrato: "42,0", volTrato: "35,0", hoje: false, travada: true },
+  { n: 5, dias: "13 a 15", racao: "8,05", vol: "3,50", racaoTrato: "53,7", volTrato: "23,3", hoje: false, travada: true },
+];
+
+const FAQ = [
+  {
+    q: "Como recebo o acesso?",
+    a: "Depois que o pagamento é confirmado, você recebe um e-mail com o link para criar sua senha. Confira também o spam.",
+  },
+  {
+    q: "Funciona no celular?",
+    a: "Sim. Abre direto no navegador, no celular, no tablet ou no computador, sem instalar nada.",
+  },
+  {
+    q: "É pagamento único mesmo?",
+    a: "Sim. Você paga uma vez e o acesso é vitalício, sem mensalidade.",
+  },
+  {
+    q: "E se eu não gostar?",
+    a: "Você tem 7 dias para desistir da compra e pedir o dinheiro de volta.",
+  },
+  {
+    q: "O plano serve para qualquer lote?",
+    a: "O cálculo usa o peso médio e o número de animais do lote. Para casos especiais, confirme a dieta com seu zootecnista ou veterinário.",
+  },
+  {
+    q: "Preciso saber o peso de cada animal na compra do lote?",
+    a: "Não. Você lança o lote fechado e completa o peso individual depois, quando pesar.",
+  },
+];
 
 export default function HomePage() {
   return (
-    <main className="light-only" style={{ backgroundColor: CREAM, color: INK }}>
+    <main
+      className="light-only pb-24 md:pb-0"
+      style={{ backgroundColor: PAPER, color: INK }}
+    >
       <Track pagina="home" />
       <SiteHeader />
       <Hero />
-      <PainSection />
-      <CycleSection />
-      <RealitySection />
-      <PlatformSection />
-      <AudienceSection />
+      <DemoSection />
+      <ProblemSection />
+      <HowSection />
+      <CompareSection />
       <PricingSection />
       <FaqSection />
       <SiteFooter />
+      <StickyBar />
     </main>
   );
 }
@@ -33,33 +69,26 @@ export default function HomePage() {
 
 function SiteHeader() {
   return (
-    <header
-      className="sticky top-0 z-50 border-b border-white/10 backdrop-blur"
-      style={{ backgroundColor: `${DARK}f2` }}
-    >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <span className="flex items-center gap-2 font-bold text-white">
-          <span className="text-xl">🐂</span>
-          Boi no Cocho
-        </span>
-        <nav className="hidden items-center gap-8 text-sm font-medium text-white/80 sm:flex">
-          <a href="#ciclo" className="hover:text-white">
-            Funcionalidades
+    <header style={{ backgroundColor: DARK }}>
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 md:px-10">
+        <span className="text-xl font-extrabold text-white">Boi no Cocho</span>
+        <nav className="flex items-center gap-6 text-sm font-semibold text-white/80">
+          <a href="#como" className="hidden hover:text-white md:inline">
+            Como funciona
           </a>
-          <a href="#duvidas" className="hover:text-white">
-            Perguntas frequentes
+          <a href="#preco" className="hidden hover:text-white md:inline">
+            Preço
           </a>
-          <Link href="/login" className="hover:text-white">
+          <a href="#duvidas" className="hidden hover:text-white md:inline">
+            Dúvidas
+          </a>
+          <Link
+            href="/login"
+            className="flex min-h-[44px] items-center rounded-lg px-3 hover:text-white md:border md:border-white/40 md:px-4 md:text-white"
+          >
             Entrar
           </Link>
         </nav>
-        <Link
-          href="/comprar"
-          className="rounded-md bg-white px-4 py-2 text-sm font-bold"
-          style={{ color: DARK }}
-        >
-          Comprar acesso
-        </Link>
       </div>
     </header>
   );
@@ -69,90 +98,100 @@ function SiteHeader() {
 
 function Hero() {
   return (
-    <section
-      className="px-6 pb-16 pt-16 sm:pb-24 sm:pt-20"
-      style={{
-        background: `linear-gradient(180deg, ${DARK} 0%, ${DARK_2} 100%)`,
-      }}
-    >
-      <div className="mx-auto max-w-3xl text-center">
-        <h1 className="text-3xl font-extrabold leading-tight text-white sm:text-5xl">
-          Confinamento tocado no chute é aposta.
-        </h1>
-        <p
-          className="mt-2 text-3xl font-extrabold leading-tight sm:text-5xl"
-          style={{ color: "#d79a6a" }}
-        >
-          Confinamento com números é lucro.
-        </p>
-        <p className="mx-auto mt-6 max-w-xl text-base text-white/70 sm:text-lg">
-          O Boi no Cocho organiza a compra do lote, a ração que vai pro cocho,
-          os custos e o resultado da engorda — num painel simples, pelo
-          celular ou computador.
-        </p>
-
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            href="/comprar"
-            className="rounded-md px-7 py-3 text-base font-bold text-white"
-            style={{ backgroundColor: RUST }}
-          >
-            Quero controlar meu confinamento
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-md border border-white/30 px-7 py-3 text-base font-semibold text-white"
-          >
-            Já tenho conta
-          </Link>
+    <section style={{ backgroundColor: DARK }} className="text-white">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-12 pt-4 md:grid-cols-[1.05fr_0.95fr] md:gap-14 md:px-10 md:pb-20 md:pt-10">
+        <div className="flex flex-col gap-4 md:gap-5">
+          <h1 className="text-[40px] font-extrabold leading-[1.02] md:text-6xl">
+            A ração certa para cada dia dos 15 dias de adaptação
+          </h1>
+          <p className="max-w-xl text-lg leading-relaxed text-white/80 md:text-xl">
+            Informe o peso do lote. O app calcula a ração e o volumoso de cada
+            fase e de cada trato, e recalcula quando você pesar de novo.
+          </p>
+          <div className="mt-1 flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
+            <Link
+              href="/comprar"
+              className="flex min-h-[64px] flex-col items-center justify-center rounded-xl px-8 py-2 text-center"
+              style={{ backgroundColor: HAY, color: INK }}
+            >
+              <span className="text-xl font-extrabold md:text-2xl">
+                Quero meu plano de adaptação
+              </span>
+              <span className="text-sm font-semibold">
+                R$ 64,90 · pagamento único
+              </span>
+            </Link>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/75 md:flex-col md:gap-y-1">
+              <li>Acesso vitalício, sem mensalidade</li>
+              <li>7 dias para desistir</li>
+            </ul>
+          </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold text-white/80">
-          <Badge>Pagamento único</Badge>
-          <Badge>Acesso vitalício</Badge>
-          <Badge>Sem mensalidade</Badge>
+        <div
+          className="flex flex-col gap-3 rounded-2xl p-4 md:p-5"
+          style={{ backgroundColor: PAPER, color: INK }}
+        >
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-extrabold" style={{ color: DARK }}>
+              Lote Outubro
+            </span>
+            <span className="text-sm" style={{ color: MUTED }}>
+              20 animais · 350 kg
+            </span>
+          </div>
+          <div
+            className="rounded-lg border-2 px-3 py-2 text-base font-semibold"
+            style={{ backgroundColor: "#fff3cf", borderColor: HAY }}
+          >
+            Hoje: dia 5 de 15, Fase 2
+          </div>
+          {FASES.slice(0, 2).map((f) => (
+            <FaseResumo key={f.n} fase={f} />
+          ))}
+          <p className="text-xs" style={{ color: MUTED }}>
+            R = ração, V = volumoso, em kg por trato, para o lote inteiro.
+          </p>
         </div>
       </div>
-
-      <DashboardMock />
     </section>
   );
 }
 
-function Badge({ children }: { children: ReactNode }) {
-  return (
-    <span className="rounded-full border border-white/20 px-3 py-1">
-      {children}
-    </span>
-  );
-}
-
-function DashboardMock() {
-  const tiles = [
-    { label: "Animais no curral", value: "42" },
-    { label: "GMD esperado", value: "1,45 kg/dia" },
-    { label: "Custo ração/dia", value: "R$ 612" },
-    { label: "Dias de confinamento", value: "58" },
-  ];
+function FaseResumo({ fase }: { fase: (typeof FASES)[number] }) {
   return (
     <div
-      className="mx-auto mt-14 max-w-4xl rounded-xl border border-white/10 p-5 sm:p-8"
-      style={{ backgroundColor: "#0f1a0f" }}
+      className="flex flex-col gap-2 rounded-xl bg-white p-3"
+      style={{
+        border: fase.hoje ? `3px solid ${HAY}` : `2px solid ${BORDER}`,
+        backgroundColor: fase.hoje ? "#fffaf0" : "#ffffff",
+      }}
     >
-      <div className="mb-5 flex items-center justify-between text-sm text-white/60">
-        <span>Painel do lote — Curral 4</span>
-        <span className="rounded-full border border-white/20 px-2 py-0.5 text-xs">
-          Em confinamento
+      <div className="flex items-center justify-between">
+        <span className="text-xl font-bold" style={{ color: "#1d3a24" }}>
+          Fase {fase.n}{" "}
+          <span className="text-sm font-semibold" style={{ color: MUTED }}>
+            · dias {fase.dias}
+          </span>
         </span>
-      </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {tiles.map((t) => (
-          <div
-            key={t.label}
-            className="rounded-lg border border-white/10 bg-white/5 p-4"
+        {fase.hoje && (
+          <span
+            className="rounded-full px-2.5 py-0.5 text-xs font-bold"
+            style={{ backgroundColor: HAY }}
           >
-            <p className="text-xs text-white/50">{t.label}</p>
-            <p className="mt-1 text-lg font-bold text-white">{t.value}</p>
+            HOJE
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {["07:00", "12:00", "17:00"].map((h) => (
+          <div
+            key={h}
+            className="rounded-lg px-2 py-1.5 text-xs md:text-sm"
+            style={{ backgroundColor: SOFT }}
+          >
+            <b>{h}</b>
+            <br />R {fase.racaoTrato} · V {fase.volTrato}
           </div>
         ))}
       </div>
@@ -160,399 +199,258 @@ function DashboardMock() {
   );
 }
 
-/* ---------- Pain section ---------- */
+/* ---------- Demonstração ---------- */
 
-function PainSection() {
-  const items = [
-    {
-      title: "O resultado só aparece no abate",
-      desc: "Você compra, trata o lote por meses e só sabe se ganhou ou perdeu dinheiro quando o boi já foi vendido.",
-    },
-    {
-      title: "A ração vai pro cocho sem controle",
-      desc: "Sem saber quanto cada curral está consumindo, não dá pra saber quanto a dieta está custando de verdade.",
-    },
-    {
-      title: "As contas vivem espalhadas",
-      desc: "Caderno, WhatsApp, memória. Na hora de fechar a conta do lote, os números nunca batem direito.",
-    },
-  ];
+function DemoSection() {
   return (
-    <section className="px-6 py-16 sm:py-20">
-      <div className="mx-auto max-w-3xl">
-        <h2 className="text-2xl font-bold sm:text-3xl">
-          Isso te soa familiar?
-        </h2>
-        <div className="mt-8 divide-y" style={{ borderColor: HAIRLINE }}>
-          {items.map((it, i) => (
-            <div
-              key={it.title}
-              className="flex gap-5 border-t py-6 first:border-t-0 first:pt-0"
-              style={{ borderColor: HAIRLINE }}
-            >
-              <span
-                className="mt-1 text-sm font-bold"
-                style={{ color: RUST }}
-              >
-                {String(i + 1).padStart(2, "0")}
+    <section className="mx-auto max-w-6xl px-5 pt-12 md:px-10 md:pt-16">
+      <h2
+        className="text-[28px] font-extrabold leading-tight md:text-4xl"
+        style={{ color: DARK }}
+      >
+        As 5 fases, com a quantidade de cada animal
+      </h2>
+      <p className="mt-2 text-base md:text-lg" style={{ color: MUTED }}>
+        Exemplo: lote de 20 animais com 350 kg de peso médio. As fases 3, 4 e 5
+        ficam liberadas depois da compra.
+      </p>
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-5">
+        {FASES.map((f) => (
+          <div
+            key={f.n}
+            className="flex flex-col gap-0.5 rounded-2xl p-4"
+            style={
+              f.travada
+                ? { backgroundColor: SOFT, border: "2px dashed #8d9a86" }
+                : {
+                    backgroundColor: f.hoje ? "#fffaf0" : "#ffffff",
+                    border: f.hoje ? `3px solid ${HAY}` : `2px solid ${BORDER}`,
+                  }
+            }
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xl font-bold" style={{ color: "#1d3a24" }}>
+                Fase {f.n}
               </span>
-              <div>
-                <h3 className="font-semibold">{it.title}</h3>
-                <p className="mt-1 text-sm" style={{ color: MUTED }}>
-                  {it.desc}
-                </p>
-              </div>
+              {f.hoje && (
+                <span
+                  className="rounded-full px-2.5 py-0.5 text-xs font-bold"
+                  style={{ backgroundColor: HAY }}
+                >
+                  HOJE
+                </span>
+              )}
             </div>
-          ))}
+            <span className="text-sm" style={{ color: MUTED }}>
+              dias {f.dias}
+            </span>
+            <span className="mt-2 text-xs" style={{ color: MUTED }}>
+              Ração por animal
+            </span>
+            <span
+              className="select-none text-3xl font-bold leading-tight"
+              style={f.travada ? { color: "#8d9a86", filter: "blur(5px)" } : undefined}
+            >
+              {f.racao} kg
+            </span>
+            <span className="text-xs" style={{ color: MUTED }}>
+              Volumoso por animal
+            </span>
+            <span
+              className="select-none text-3xl font-bold leading-tight"
+              style={f.travada ? { color: "#8d9a86", filter: "blur(5px)" } : undefined}
+            >
+              {f.vol} kg
+            </span>
+            {f.travada && (
+              <span className="mt-2 text-xs font-bold" style={{ color: "#1d3a24" }}>
+                Liberada depois da compra
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Problema ---------- */
+
+function ProblemSection() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 pt-12 md:px-10 md:pt-16">
+      <h2
+        className="text-3xl font-extrabold leading-tight md:text-4xl"
+        style={{ color: DARK }}
+      >
+        A adaptação é a fase em que mais se erra
+      </h2>
+      <p className="mt-3 max-w-3xl text-lg leading-relaxed" style={{ color: "#2a362a" }}>
+        Quem chega no cocho sem plano costuma dar ração demais cedo, ou menos do
+        que o animal aguenta. O resultado pode ser animal que para de comer,
+        perda de peso e prejuízo logo na entrada do lote.
+      </p>
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <div
+          className="rounded-xl bg-white p-4 text-base leading-snug"
+          style={{ border: `2px solid ${BORDER}` }}
+        >
+          <b>Conta feita de cabeça</b>
+          <br />O peso muda e a quantidade certa muda junto.
+        </div>
+        <div
+          className="rounded-xl bg-white p-4 text-base leading-snug"
+          style={{ border: `2px solid ${BORDER}` }}
+        >
+          <b>Cada trato num papel</b>
+          <br />
+          Sem registro, não dá para saber se o que foi para o cocho bate com o
+          previsto.
         </div>
       </div>
     </section>
   );
 }
 
-/* ---------- Cycle / feature sequence ---------- */
+/* ---------- Como funciona ---------- */
 
-type CycleStep = {
-  step: string;
-  title: string;
-  desc: string;
-  bullets: string[];
-  tiles: { label: string; value: string }[];
-};
-
-const CYCLE: CycleStep[] = [
-  {
-    step: "Entrada do lote",
-    title: "Controle de lote",
-    desc: "Registre a compra — quantidade, peso de entrada e investimento — e já veja a margem provável antes de começar a engorda.",
-    bullets: [
-      "Quantidade de animais e peso de entrada",
-      "Investimento total do lote",
-      "Dias de confinamento previstos",
-      "Peso e ganho de saída projetados",
-    ],
-    tiles: [
-      { label: "Animais", value: "38 bois" },
-      { label: "Peso médio entrada", value: "365 kg" },
-      { label: "Investimento", value: "R$ 61.200" },
-      { label: "Ganho projetado", value: "+2.280 kg" },
-    ],
-  },
-  {
-    step: "Trato diário",
-    title: "Ração no cocho",
-    desc: "Registre a dieta de cada curral — ingredientes, quilos por dia, custo por quilo — e saiba exatamente quanto está entrando no cocho e quanto está custando.",
-    bullets: [
-      "Percentual de cada ingrediente da dieta",
-      "Quilos e sacos oferecidos por dia",
-      "Custo por quilo e custo diário total",
-      "Consumo por curral, dia a dia",
-    ],
-    tiles: [
-      { label: "Dieta do dia", value: "147,8 kg" },
-      { label: "Custo/kg", value: "R$ 1,73" },
-      { label: "Custo diário", value: "R$ 255,45" },
-      { label: "Curral", value: "04" },
-    ],
-  },
-  {
-    step: "Durante a engorda",
-    title: "Controle financeiro",
-    desc: "Lance ração, sanidade, frete e mão de obra, e acompanhe o custo acumulado de cada lote enquanto ele ainda está no cocho — não só no fim.",
-    bullets: [
-      "Custos de ração, sanidade, frete e mão de obra",
-      "Custo acumulado por lote em tempo real",
-      "Custo por arroba produzida",
-      "Margem estimada antes da venda",
-    ],
-    tiles: [
-      { label: "Custo acumulado", value: "R$ 22.990" },
-      { label: "Custo/arroba", value: "R$ 307" },
-      { label: "Margem estimada", value: "9,4%" },
-      { label: "Lucro projetado", value: "R$ 10.070" },
-    ],
-  },
-  {
-    step: "Saída do lote",
-    title: "Relatórios e indicadores",
-    desc: "Veja o ganho de peso, a conversão alimentar e o resultado financeiro de cada lote assim que ele sai do confinamento.",
-    bullets: [
-      "Ganho médio diário (GMD) por curral",
-      "Conversão alimentar do lote",
-      "Peso e rendimento de carcaça",
-      "Resultado financeiro final da engorda",
-    ],
-    tiles: [
-      { label: "GMD médio", value: "1,52 kg/dia" },
-      { label: "Conversão", value: "6,1:1" },
-      { label: "Rendimento médio", value: "54,1%" },
-      { label: "Resultado", value: "R$ 10.070" },
-    ],
-  },
-];
-
-function CycleSection() {
+function HowSection() {
+  const passos = [
+    ["Registre o lote.", "Nome, número de animais, data e peso médio de entrada."],
+    ["Veja o plano na hora.", "As 5 fases de 3 dias, com os tratos das 07:00, 12:00 e 17:00."],
+    ["Pesou de novo? Atualize.", "Todas as fases que faltam se recalculam com o peso novo."],
+  ];
   return (
-    <section id="ciclo" className="px-6 py-16 sm:py-24" style={{ backgroundColor: "#f0ead9" }}>
-      <div className="mx-auto max-w-5xl">
-        <div className="max-w-2xl">
-          <h2 className="text-2xl font-bold sm:text-3xl">
-            O ciclo do seu confinamento, organizado do início ao fim
+    <section id="como" className="mx-auto max-w-6xl px-5 pt-12 md:px-10 md:pt-16">
+      <h2
+        className="text-3xl font-extrabold leading-tight md:text-4xl"
+        style={{ color: DARK }}
+      >
+        Como funciona
+      </h2>
+      <ol className="mt-5 grid gap-4 md:grid-cols-3 md:gap-6">
+        {passos.map(([titulo, texto], i) => (
+          <li key={titulo} className="flex items-start gap-4">
+            <span
+              className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-xl font-extrabold"
+              style={{ backgroundColor: DARK, color: HAY }}
+            >
+              {i + 1}
+            </span>
+            <p className="text-lg leading-snug">
+              <b>{titulo}</b> {texto}
+            </p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/* ---------- Caderno x app ---------- */
+
+function CompareSection() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 pt-12 md:px-10 md:pt-16">
+      <div className="grid gap-8 md:grid-cols-2 md:gap-14">
+        <div>
+          <h2
+            className="text-3xl font-extrabold leading-tight md:text-4xl"
+            style={{ color: DARK }}
+          >
+            Caderno ou Boi no Cocho?
           </h2>
-          <p className="mt-3 text-base" style={{ color: MUTED }}>
-            Simples de usar, pensado pra quem vive a rotina do cocho — não
-            pra quem só entende de planilha.
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div
+              className="rounded-xl p-4 text-[15px] leading-relaxed"
+              style={{ backgroundColor: "#e9ebe2" }}
+            >
+              <b className="text-lg">No caderno</b>
+              <br />
+              Conta a cada pesagem
+              <br />
+              Erro de conta passa batido
+              <br />
+              Sem histórico do lote
+              <br />
+              Sem custo por dia
+            </div>
+            <div
+              className="rounded-xl p-4 text-[15px] leading-relaxed text-white"
+              style={{ backgroundColor: DARK }}
+            >
+              <b className="text-lg" style={{ color: HAY }}>
+                No app
+              </b>
+              <br />
+              Plano pronto pelo peso
+              <br />
+              Recalcula sozinho
+              <br />
+              Histórico de cada trato
+              <br />
+              Custo de ração por dia
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2
+            className="text-3xl font-extrabold leading-tight md:text-4xl"
+            style={{ color: DARK }}
+          >
+            Além da adaptação, o confinamento inteiro
+          </h2>
+          <p className="mt-3 text-lg leading-relaxed" style={{ color: "#2a362a" }}>
+            Compra do lote, ração no cocho, estoque, despesas e resultado, tudo
+            no mesmo lugar. O app tem tema próprio para ler ao ar livre, no sol.
           </p>
         </div>
-
-        <div className="mt-14 space-y-16 sm:space-y-24">
-          {CYCLE.map((c, i) => (
-            <div
-              key={c.title}
-              className={`flex flex-col gap-8 sm:gap-12 ${
-                i % 2 === 1 ? "sm:flex-row-reverse" : "sm:flex-row"
-              } sm:items-center`}
-            >
-              <div className="sm:w-1/2">
-                <p
-                  className="text-xs font-bold uppercase tracking-wide"
-                  style={{ color: RUST }}
-                >
-                  Etapa {i + 1} · {c.step}
-                </p>
-                <h3 className="mt-2 text-xl font-bold sm:text-2xl">
-                  {c.title}
-                </h3>
-                <p className="mt-3 text-sm sm:text-base" style={{ color: MUTED }}>
-                  {c.desc}
-                </p>
-                <ul className="mt-5 space-y-2 text-sm">
-                  {c.bullets.map((b) => (
-                    <li key={b} className="flex items-start gap-2">
-                      <span style={{ color: BRAND }}>✓</span>
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="sm:w-1/2">
-                <div
-                  className="rounded-xl border bg-white p-5 shadow-sm"
-                  style={{ borderColor: HAIRLINE }}
-                >
-                  <p className="mb-4 text-xs font-semibold" style={{ color: MUTED }}>
-                    {c.title}
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {c.tiles.map((t) => (
-                      <div
-                        key={t.label}
-                        className="rounded-lg p-3"
-                        style={{ backgroundColor: CREAM }}
-                      >
-                        <p className="text-[11px]" style={{ color: MUTED }}>
-                          {t.label}
-                        </p>
-                        <p className="mt-0.5 text-sm font-bold" style={{ color: INK }}>
-                          {t.value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
 }
 
-/* ---------- Reality / agitation ---------- */
-
-function RealitySection() {
-  const items = [
-    {
-      title: "Não mede o ganho de peso real",
-      desc: "Sem GMD por curral, você não sabe se o lote está engordando ou só comendo.",
-    },
-    {
-      title: "Não sabe a conversão alimentar",
-      desc: "Cada quilo de ração que não virou carne é dinheiro que já saiu do bolso.",
-    },
-    {
-      title: "Só vê o resultado no frigorífico",
-      desc: "Quando os números finalmente aparecem, não dá mais pra mudar nada naquele lote.",
-    },
-  ];
-  return (
-    <section
-      className="px-6 py-16 sm:py-20"
-      style={{ backgroundColor: DARK, color: "white" }}
-    >
-      <div className="mx-auto max-w-3xl">
-        <p className="text-sm font-semibold" style={{ color: "#d79a6a" }}>
-          A conta que a maioria só faz tarde demais
-        </p>
-        <h2 className="mt-2 text-2xl font-bold sm:text-3xl">
-          Você compra o lote, investe em ração, espera a engorda — e só
-          depois descobre se ganhou ou perdeu dinheiro.
-        </h2>
-        <p className="mt-3 text-white/70">Isso não é gestão. É aposta.</p>
-
-        <div className="mt-10 grid gap-6 sm:grid-cols-3">
-          {items.map((it) => (
-            <div key={it.title} className="border-t border-white/15 pt-4">
-              <h3 className="font-semibold text-white">{it.title}</h3>
-              <p className="mt-2 text-sm text-white/60">{it.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Platform ---------- */
-
-function PlatformSection() {
-  const devices = [
-    { icon: "💻", label: "Computador", sub: "Windows ou Mac" },
-    { icon: "📱", label: "Celular", sub: "iPhone ou Android" },
-    { icon: "📋", label: "Tablet", sub: "iPad ou Android" },
-  ];
-  return (
-    <section className="px-6 py-16 sm:py-20">
-      <div className="mx-auto max-w-3xl text-center">
-        <h2 className="text-2xl font-bold sm:text-3xl">
-          Funciona onde você está — na sede, no curral ou na estrada
-        </h2>
-        <p className="mt-3" style={{ color: MUTED }}>
-          Acesse pelo navegador, sem precisar instalar nada. Atualizações
-          chegam sozinhas, sem custo extra.
-        </p>
-        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {devices.map((d) => (
-            <div
-              key={d.label}
-              className="rounded-xl border bg-white p-6"
-              style={{ borderColor: HAIRLINE }}
-            >
-              <div className="text-2xl">{d.icon}</div>
-              <p className="mt-2 font-semibold">{d.label}</p>
-              <p className="text-sm" style={{ color: MUTED }}>
-                {d.sub}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Audience ---------- */
-
-function AudienceSection() {
-  const yes = [
-    "Quer sair do controle solto em caderno e WhatsApp",
-    "Quer começar um confinamento pequeno com segurança",
-    "Já confina e quer aumentar a margem por arroba",
-    "Decide pelos números, não só pelo olho",
-  ];
-  const no = [
-    "Prefere continuar decidindo no chute",
-    "Não pretende acompanhar os números do lote",
-    "Está satisfeito em só saber o resultado no abate",
-  ];
-  return (
-    <section className="px-6 py-16 sm:py-20" style={{ backgroundColor: "#f0ead9" }}>
-      <div className="mx-auto max-w-3xl">
-        <h2 className="text-2xl font-bold sm:text-3xl">
-          Feito pra quem vive a rotina do confinamento
-        </h2>
-        <p className="mt-3" style={{ color: MUTED }}>
-          Sem termo técnico desnecessário. Sem burocracia.
-        </p>
-        <div className="mt-10 grid gap-8 sm:grid-cols-2">
-          <div>
-            <h3 className="font-semibold" style={{ color: BRAND }}>
-              É pra você se
-            </h3>
-            <ul className="mt-4 space-y-3 text-sm">
-              {yes.map((t) => (
-                <li key={t} className="flex gap-2">
-                  <span style={{ color: BRAND }}>✓</span>
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-semibold" style={{ color: RUST }}>
-              Não é pra você se
-            </h3>
-            <ul className="mt-4 space-y-3 text-sm">
-              {no.map((t) => (
-                <li key={t} className="flex gap-2">
-                  <span style={{ color: RUST }}>✗</span>
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Pricing ---------- */
+/* ---------- Preço ---------- */
 
 function PricingSection() {
   return (
-    <section
-      className="px-6 py-16 sm:py-24"
-      style={{
-        background: `linear-gradient(180deg, ${DARK} 0%, ${DARK_2} 100%)`,
-        color: "white",
-      }}
-    >
-      <div className="mx-auto max-w-md text-center">
-        <h2 className="text-2xl font-bold sm:text-3xl">
-          Pare de decidir no escuro no seu confinamento
-        </h2>
-        <p className="mt-3 text-white/70">
-          Acesso liberado por e-mail poucos minutos após o pagamento.
-        </p>
-
-        <div
-          className="mt-8 rounded-xl border border-white/10 p-8"
-          style={{ backgroundColor: "#0f1a0f" }}
-        >
-          <p className="text-sm text-white/50">Pagamento único</p>
-          <p className="mt-2 text-sm text-white/40 line-through">
-            de R$ 197,00
-          </p>
-          <p className="text-4xl font-extrabold">R$ 64,90</p>
-          <p className="mt-1 text-sm" style={{ color: "#d79a6a" }}>
-            67% de desconto · acesso vitalício
-          </p>
-
+    <section id="preco" className="mx-auto max-w-6xl px-0 pt-12 md:px-10 md:pt-16">
+      <div
+        className="grid gap-6 px-5 py-8 text-white md:grid-cols-2 md:items-center md:gap-12 md:rounded-[20px] md:px-14 md:py-12"
+        style={{ backgroundColor: DARK }}
+      >
+        <div className="flex flex-col gap-3">
+          <h2 className="text-3xl font-extrabold leading-tight md:text-4xl">
+            Pague uma vez e use sempre
+          </h2>
+          <div className="flex items-baseline gap-3">
+            <span
+              className="text-6xl font-extrabold leading-none md:text-7xl"
+              style={{ color: HAY }}
+            >
+              R$ 64,90
+            </span>
+            <span className="text-sm text-white/75">preço de lançamento</span>
+          </div>
+        </div>
+        <div className="flex flex-col gap-4">
+          <ul className="flex flex-col gap-1.5 text-base text-white/90">
+            <li>Acesso vitalício, sem mensalidade</li>
+            <li>Plano de adaptação e todos os módulos</li>
+            <li>Acesso enviado por e-mail depois do pagamento</li>
+            <li>Pix, cartão ou boleto pelo Mercado Pago</li>
+          </ul>
           <Link
             href="/comprar"
-            className="mt-6 block rounded-md px-6 py-3 text-base font-bold text-white"
-            style={{ backgroundColor: RUST }}
+            className="flex min-h-[60px] items-center justify-center rounded-xl text-xl font-extrabold md:text-2xl"
+            style={{ backgroundColor: HAY, color: INK }}
           >
-            Quero ter controle total do meu confinamento
+            Quero meu plano de adaptação
           </Link>
-
-          <div className="mt-5 flex items-center justify-center gap-4 text-xs text-white/50">
-            <span>🔒 Pagamento seguro</span>
-            <span>🚀 Acesso imediato</span>
-          </div>
+          <p className="text-sm leading-snug text-white/75">
+            <b className="text-white">7 dias para desistir.</b> Se não for o que
+            você esperava, pode pedir o dinheiro de volta nesse prazo.
+          </p>
         </div>
       </div>
     </section>
@@ -561,68 +459,70 @@ function PricingSection() {
 
 /* ---------- FAQ ---------- */
 
-const FAQ = [
-  {
-    q: "Preciso saber o peso de cada animal já na compra do lote?",
-    a: "Não. Você pode lançar o lote fechado e completar o peso individual de cada animal depois, assim que pesar.",
-  },
-  {
-    q: "O Boi no Cocho funciona no celular?",
-    a: "Sim. Funciona direto pelo navegador, sem precisar instalar nada — no computador, tablet ou celular.",
-  },
-  {
-    q: "É pagamento único mesmo, sem mensalidade?",
-    a: "Sim. Você paga uma vez e o acesso não expira.",
-  },
-  {
-    q: "Como recebo o acesso depois de comprar?",
-    a: "Assim que o pagamento é aprovado, você recebe um e-mail para criar sua senha e já pode entrar no sistema.",
-  },
-  {
-    q: "Tem suporte se eu tiver dúvida de como usar?",
-    a: "Sim, dá pra falar diretamente com a gente.",
-  },
-];
-
 function FaqSection() {
   return (
-    <section id="duvidas" className="px-6 py-16 sm:py-24">
-      <div className="mx-auto max-w-2xl">
-        <h2 className="text-2xl font-bold sm:text-3xl">Perguntas frequentes</h2>
-        <div className="mt-8 divide-y" style={{ borderColor: HAIRLINE }}>
-          {FAQ.map((f) => (
-            <details key={f.q} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-semibold">
-                {f.q}
-                <span
-                  className="ml-4 text-xl transition-transform group-open:rotate-45"
-                  style={{ color: RUST }}
-                >
-                  +
-                </span>
-              </summary>
-              <p className="mt-3 text-sm" style={{ color: MUTED }}>
-                {f.a}
-              </p>
-            </details>
-          ))}
-        </div>
+    <section id="duvidas" className="mx-auto max-w-6xl px-5 pt-12 md:px-10 md:pt-16">
+      <h2
+        className="text-3xl font-extrabold leading-tight md:text-4xl"
+        style={{ color: DARK }}
+      >
+        Dúvidas comuns
+      </h2>
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        {FAQ.map((f) => (
+          <div
+            key={f.q}
+            className="rounded-xl bg-white px-4 py-4"
+            style={{ border: `2px solid ${BORDER}` }}
+          >
+            <p className="font-bold">{f.q}</p>
+            <p className="mt-1.5 text-[15px] leading-relaxed" style={{ color: "#3f4c3c" }}>
+              {f.a}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
-/* ---------- Footer ---------- */
+/* ---------- Rodapé ---------- */
 
 function SiteFooter() {
   return (
     <footer
-      className="px-6 py-10 text-center text-sm"
-      style={{ backgroundColor: DARK, color: "rgba(255,255,255,0.5)" }}
+      className="mx-auto max-w-6xl px-5 py-10 text-sm leading-relaxed md:px-10"
+      style={{ color: MUTED }}
     >
-      <p className="font-semibold text-white/80">🐂 Boi no Cocho</p>
-      <p className="mt-1">Gestão completa de confinamento</p>
-      <p className="mt-4">© 2026 Boi no Cocho. Todos os direitos reservados.</p>
+      <b className="text-base" style={{ color: DARK }}>
+        Boi no Cocho
+      </b>
+      <br />
+      Gestão de confinamento bovino
+      <br />© 2026 Boi no Cocho
     </footer>
+  );
+}
+
+/* ---------- Barra fixa (celular) ---------- */
+
+function StickyBar() {
+  return (
+    <div
+      className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 px-4 py-2.5 md:hidden"
+      style={{ backgroundColor: DARK, boxShadow: `0 -2px 0 ${HAY}` }}
+    >
+      <div className="flex flex-col text-white">
+        <span className="text-2xl font-extrabold leading-none">R$ 64,90</span>
+        <span className="text-xs text-white/75">pagamento único</span>
+      </div>
+      <Link
+        href="/comprar"
+        className="flex min-h-[48px] items-center rounded-[10px] px-5 text-lg font-extrabold"
+        style={{ backgroundColor: HAY, color: INK }}
+      >
+        Quero meu plano
+      </Link>
+    </div>
   );
 }
