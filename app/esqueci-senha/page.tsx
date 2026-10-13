@@ -2,10 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 
 export default function EsqueciSenhaPage() {
-  const supabase = createClient();
+  // Fluxo "implicit": o link do e-mail funciona em qualquer aparelho ou navegador.
+  // (No fluxo padrão, o link só funciona no mesmo navegador em que o pedido foi feito.)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        flowType: "implicit",
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    }
+  );
   const [email, setEmail] = useState("");
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -48,7 +61,7 @@ export default function EsqueciSenhaPage() {
               alguns minutos. Confira também o spam e a aba Promoções.
             </p>
             <p className="text-xs text-gray-500">
-              Abra o link no mesmo aparelho e navegador em que pediu.
+              Use o link mais recente e abra uma vez só. Cada link vale para um único uso.
             </p>
             <Link href="/login" className="btn-primary w-full block">
               Voltar para o login

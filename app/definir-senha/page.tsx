@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -11,6 +12,28 @@ export default function DefinirSenhaPage() {
   const [confirmar, setConfirmar] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // null = validando o link, true = sessão ok, false = link inválido/expirado
+  const [pronto, setPronto] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    const { data: sub } = supabase.auth.onAuthStateChange((_evento, sessao) => {
+      if (ativo && sessao) setPronto(true);
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      if (ativo && data.session) setPronto(true);
+    });
+    // se em alguns segundos não houver sessão, o link não valeu
+    const t = setTimeout(() => {
+      if (ativo) setPronto((atual) => (atual === true ? true : false));
+    }, 4000);
+    return () => {
+      ativo = false;
+      clearTimeout(t);
+      sub.subscription.unsubscribe();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +73,20 @@ export default function DefinirSenhaPage() {
           <p className="text-gray-500 text-sm mt-1">Último passo pra acessar o Boi no Cocho</p>
         </div>
 
+        {pronto === false && (
+          <div className="card space-y-3 text-center mb-4">
+            <p className="text-sm text-red-600">
+              Esse link expirou ou já foi usado. Peça um novo link abaixo e use só o mais recente.
+            </p>
+            <Link href="/esqueci-senha" className="btn-primary w-full block">
+              Pedir novo link
+            </Link>
+          </div>
+        )}
+        {pronto === null && (
+          <p className="text-center text-sm text-gray-500 mb-4">Validando seu link...</p>
+        )}
+
         <form onSubmit={handleSubmit} className="card space-y-4">
           <div>
             <label className="label-field">Nova senha</label>
@@ -67,7 +104,7 @@ export default function DefinirSenhaPage() {
             />
           </div>
           {erro && <p className="text-sm text-red-600">{erro}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full">
+          <button type="submit" disabled={loading || pronto !== true} className="btn-primary w-full">
             {loading ? "Salvando..." : "Entrar no sistema"}
           </button>
         </form>
