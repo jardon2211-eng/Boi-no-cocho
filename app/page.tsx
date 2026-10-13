@@ -84,9 +84,9 @@ function SiteHeader() {
           </a>
           <Link
             href="/login"
-            className="flex min-h-[44px] items-center rounded-lg px-3 hover:text-white md:border md:border-white/40 md:px-4 md:text-white"
+            className="flex min-h-[44px] items-center rounded-lg border border-white/50 px-4 text-white hover:bg-white/10"
           >
-            Entrar
+            Já sou cliente · Entrar
           </Link>
         </nav>
       </div>
@@ -499,6 +499,10 @@ function SiteFooter() {
       </b>
       <br />
       Gestão de confinamento bovino
+      <br />
+      <Link href="/login" className="font-semibold underline">
+        Entrar no aplicativo
+      </Link>
       <br />© 2026 Boi no Cocho
     </footer>
   );

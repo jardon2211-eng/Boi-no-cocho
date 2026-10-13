@@ -39,12 +39,20 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute = path.startsWith("/comprar") ||
     path.startsWith("/definir-senha") ||
     path.startsWith("/esqueci-senha") ||
+    path.startsWith("/entrar") ||
     path.startsWith("/api");
 
   // não logado tentando acessar área interna -> manda pro login
   if (!user && !isAuthRoute && !isPublicRoute && path !== "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // cliente já logado abrindo o site -> vai direto pro aplicativo, sem passar pela página de venda
+  if (user && path === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
