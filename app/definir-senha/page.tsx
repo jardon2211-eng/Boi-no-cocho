@@ -17,20 +17,46 @@ export default function DefinirSenhaPage() {
 
   useEffect(() => {
     let ativo = true;
-    const { data: sub } = supabase.auth.onAuthStateChange((_evento, sessao) => {
-      if (ativo && sessao) setPronto(true);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      if (ativo && data.session) setPronto(true);
-    });
-    // se em alguns segundos não houver sessão, o link não valeu
-    const t = setTimeout(() => {
-      if (ativo) setPronto((atual) => (atual === true ? true : false));
-    }, 4000);
+
+    async function iniciar() {
+      // 1) Link do e-mail (convite ou "esqueci a senha"): os dados vêm depois do "#" na URL.
+      //    Lemos na mão porque o cliente do navegador está no modo PKCE e recusa esse formato.
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const query = new URLSearchParams(window.location.search);
+      const accessToken = hash.get("access_token");
+      const refreshToken = hash.get("refresh_token");
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (ativo) setPronto(!error);
+        if (!error) window.history.replaceState(null, "", window.location.pathname);
+        return;
+      }
+
+      // 2) Link no formato com ?code= (PKCE)
+      const code = query.get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (ativo) setPronto(!error);
+        if (!error) window.history.replaceState(null, "", window.location.pathname);
+        return;
+      }
+
+      // 3) Link com erro (expirado/já usado), ou quem abriu a página já logado
+      if (hash.get("error") || query.get("error")) {
+        if (ativo) setPronto(false);
+        return;
+      }
+      const { data } = await supabase.auth.getSession();
+      if (ativo) setPronto(!!data.session);
+    }
+
+    iniciar();
     return () => {
       ativo = false;
-      clearTimeout(t);
-      sub.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
