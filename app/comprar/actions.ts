@@ -13,10 +13,12 @@ export async function iniciarPagamento(formData: FormData) {
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   if (!emailValido) {
-    throw new Error("Informe um e-mail válido para receber o acesso.");
+    redirect("/comprar?erro=email");
   }
 
-  const resp = await fetch("https://api.mercadopago.com/checkout/preferences", {
+  let resp: Response;
+  try {
+    resp = await fetch("https://api.mercadopago.com/checkout/preferences", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -50,11 +52,15 @@ export async function iniciarPagamento(formData: FormData) {
       statement_descriptor: "BOI NO COCHO",
     }),
   });
+  } catch (e) {
+    console.error("Falha de rede ao criar preferência Mercado Pago:", e);
+    redirect("/comprar?erro=pagamento");
+  }
 
   if (!resp.ok) {
     const texto = await resp.text();
     console.error("Erro ao criar preferência Mercado Pago:", texto);
-    throw new Error("Não foi possível iniciar o pagamento. Tente novamente em instantes.");
+    redirect("/comprar?erro=pagamento");
   }
 
   const data = await resp.json();

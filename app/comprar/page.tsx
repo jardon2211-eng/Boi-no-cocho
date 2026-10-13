@@ -1,62 +1,95 @@
 import Track from "@/components/Track";
 import Link from "next/link";
-import { iniciarPagamento } from "./actions";
+import ComprarForm from "./ComprarForm";
 
-export default function ComprarPage() {
+const DARK = "#12281a";
+const PAPER = "#f6f7f1";
+const INK = "#1a2419";
+const MUTED = "#4a5547";
+const BORDER = "#cfd6c8";
+
+const MENSAGENS: Record<string, string> = {
+  email: "Esse e-mail parece inválido. Confira e tente de novo.",
+  pagamento:
+    "Não conseguimos abrir o pagamento agora. Tente de novo em instantes. Nada foi cobrado.",
+};
+
+export default function ComprarPage({
+  searchParams,
+}: {
+  searchParams: { erro?: string };
+}) {
+  const erro = searchParams.erro ? MENSAGENS[searchParams.erro] : undefined;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-50 to-white px-4">
-      <div className="w-full max-w-md">
-        <Track pagina="comprar" />
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-2">🐂</div>
-          <h1 className="text-2xl font-bold text-brand-700">Boi no Cocho</h1>
-          <p className="text-gray-500 text-sm mt-1">Gestão completa de confinamento</p>
+    <div
+      className="light-only min-h-screen px-4 py-6"
+      style={{ backgroundColor: PAPER, color: INK }}
+    >
+      <Track pagina="comprar" />
+      <div className="mx-auto w-full max-w-md">
+        <div className="mb-5 flex items-center justify-between">
+          <Link href="/" className="min-h-[44px] py-3 text-sm font-semibold" style={{ color: MUTED }}>
+            ← Voltar
+          </Link>
+          <span className="text-lg font-extrabold" style={{ color: DARK }}>
+            Boi no Cocho
+          </span>
         </div>
 
-        <div className="card space-y-5">
-          <div className="text-center">
-            <p className="text-sm text-gray-500">Pagamento único</p>
-            <p className="text-4xl font-bold text-brand-700 mt-1">R$ 64,90</p>
-            <p className="text-sm text-gray-500 mt-1">Acesso vitalício — sem mensalidade</p>
+        <div
+          className="space-y-5 rounded-2xl bg-white p-5"
+          style={{ border: `2px solid ${BORDER}` }}
+        >
+          <div>
+            <h1 className="text-2xl font-extrabold leading-tight" style={{ color: DARK }}>
+              Plano de adaptação de 15 dias + gestão do confinamento
+            </h1>
+            <p className="mt-2 text-sm" style={{ color: MUTED }}>
+              Informe o peso do lote e receba a ração e o volumoso de cada fase e de cada
+              trato (07:00, 12:00 e 17:00). Pesou de novo? O plano se recalcula.
+            </p>
           </div>
 
-          <ul className="text-sm text-gray-600 space-y-2 border-t border-gray-100 pt-4">
-            <li>✓ Todos os módulos liberados</li>
-            <li>✓ Sem cobrança recorrente</li>
+          <div className="flex items-baseline gap-2">
+            <span className="text-5xl font-extrabold" style={{ color: DARK }}>
+              R$ 64,90
+            </span>
+            <span className="text-sm" style={{ color: MUTED }}>
+              pagamento único · preço de lançamento
+            </span>
+          </div>
+
+          <ul className="space-y-1.5 text-sm" style={{ color: "#2a362a" }}>
+            <li>✓ Acesso vitalício, sem mensalidade</li>
+            <li>✓ Todos os módulos: compras, ração no cocho, estoque e despesas</li>
             <li>✓ Acesso enviado por e-mail em poucos minutos</li>
-            <li>✓ Funciona no computador e no celular</li>
+            <li>✓ Funciona no celular e no computador, sem instalar nada</li>
           </ul>
 
-          <form action={iniciarPagamento} className="space-y-3">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Seu e-mail
-              </label>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                required
-                placeholder="voce@exemplo.com"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                É pra esse e-mail que enviamos o acesso após o pagamento.
-              </p>
-            </div>
-            <button type="submit" className="btn-primary w-full">
-              Pagar com Mercado Pago — R$ 64,90
-            </button>
-          </form>
+          {erro && (
+            <p
+              className="rounded-lg p-3 text-sm font-semibold"
+              style={{ backgroundColor: "#fdecea", color: "#9b1c1c" }}
+            >
+              {erro}
+            </p>
+          )}
 
-          <p className="text-xs text-center text-gray-400">
-            Pagamento processado com segurança pelo Mercado Pago (Pix, cartão ou boleto).
+          <ComprarForm />
+
+          <p className="text-center text-xs" style={{ color: MUTED }}>
+            <b style={{ color: INK }}>7 dias para desistir:</b> se não for o que você esperava,
+            pode pedir o dinheiro de volta nesse prazo. Pagamento processado com segurança
+            pelo Mercado Pago.
           </p>
         </div>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
+        <p className="mt-4 text-center text-sm" style={{ color: MUTED }}>
           Já comprou?{" "}
-          <Link href="/login" className="text-brand-600 font-semibold hover:underline">Entrar</Link>
+          <Link href="/login" className="font-semibold underline" style={{ color: DARK }}>
+            Entrar
+          </Link>
         </p>
       </div>
     </div>
