@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { iniciarPagamento } from "./actions";
 
 const HAY = "#f2b01e";
@@ -44,6 +44,15 @@ export default function ComprarForm() {
   const [email, setEmail] = useState("");
   const [aviso, setAviso] = useState<string | null>(null);
   const [confirmado, setConfirmado] = useState(false);
+  const [ref, setRef] = useState("");
+
+  // código do afiliado guardado pelo Track (vale 30 dias)
+  useEffect(() => {
+    try {
+      const v = JSON.parse(localStorage.getItem("ref") || "null");
+      if (v?.c && Date.now() - v.t < 30 * 24 * 3600 * 1000) setRef(String(v.c));
+    } catch {}
+  }, []);
 
   function aoEnviar(e: React.FormEvent<HTMLFormElement>) {
     const s = sugestao(email);
@@ -55,6 +64,7 @@ export default function ComprarForm() {
 
   return (
     <form action={iniciarPagamento} onSubmit={aoEnviar} className="space-y-3">
+      <input type="hidden" name="ref" value={ref} />
       <div>
         <label htmlFor="email" className="mb-1 block text-sm font-semibold">
           Seu e-mail

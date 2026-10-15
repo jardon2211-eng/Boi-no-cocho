@@ -35,6 +35,45 @@ export async function POST(request: Request) {
     }
     const payment = await mpResp.json();
 
+    // registra a venda (e a comissão do afiliado, se houver). Nunca bloqueia a liberação do acesso.
+    try {
+      const adm = createAdminClient();
+      if (payment.status === "approved") {
+        const refBruto = String(payment.metadata?.ref ?? "").toLowerCase();
+        let codigo: string | null = null;
+        let comissao = 0;
+        const valor = Number(payment.transaction_amount) || 0;
+        if (/^[a-z0-9_-]{2,30}$/.test(refBruto)) {
+          const { data: af } = await adm
+            .from("afiliados")
+            .select("codigo, comissao_pct, ativo")
+            .eq("codigo", refBruto)
+            .maybeSingle();
+          if (af?.ativo) {
+            codigo = af.codigo;
+            comissao = Math.round(valor * Number(af.comissao_pct)) / 100;
+          }
+        }
+        const emailVenda = String(payment.external_reference || payment.payer?.email || "").trim().toLowerCase();
+        await adm.from("vendas").upsert(
+          {
+            payment_id: String(paymentId),
+            email: emailVenda || "desconhecido",
+            valor,
+            status: "approved",
+            afiliado_codigo: codigo,
+            comissao,
+            aprovado_em: payment.date_approved || new Date().toISOString(),
+          },
+          { onConflict: "payment_id", ignoreDuplicates: true }
+        );
+      } else if (["refunded", "charged_back", "cancelled"].includes(payment.status)) {
+        await adm.from("vendas").update({ status: payment.status }).eq("payment_id", String(paymentId));
+      }
+    } catch (e) {
+      console.error("Erro ao registrar venda/afiliado:", e);
+    }
+
     if (payment.status === "approved") {
       // O e-mail do comprador é gravado por nós em external_reference na hora
       // de criar a preferência (app/comprar/actions.ts). payment.payer?.email

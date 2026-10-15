@@ -17,9 +17,16 @@ function sessao(): string {
 
 function origem(): string {
   try {
+    const p = new URLSearchParams(window.location.search);
+    // link de afiliado (?ref=codigo): guarda por 30 dias e marca a origem
+    const r = (p.get("ref") || "").toLowerCase();
+    if (/^[a-z0-9_-]{2,30}$/.test(r)) {
+      try { localStorage.setItem("ref", JSON.stringify({ c: r, t: Date.now() })); } catch {}
+      sessionStorage.setItem("origem", "ref:" + r);
+      return "ref:" + r;
+    }
     let o = sessionStorage.getItem("origem");
     if (o) return o;
-    const p = new URLSearchParams(window.location.search);
     o = p.get("utm_source") || p.get("src") || "";
     if (!o && document.referrer) {
       try { o = new URL(document.referrer).hostname; } catch {}

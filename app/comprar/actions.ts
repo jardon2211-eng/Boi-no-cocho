@@ -16,6 +16,10 @@ export async function iniciarPagamento(formData: FormData) {
     redirect("/comprar?erro=email");
   }
 
+  // código do afiliado (se veio por um link de parceiro)
+  const refBruto = String(formData.get("ref") || "").trim().toLowerCase();
+  const ref = /^[a-z0-9_-]{2,30}$/.test(refBruto) ? refBruto : null;
+
   let resp: Response;
   try {
     resp = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -42,6 +46,7 @@ export async function iniciarPagamento(formData: FormData) {
       // do meio de pagamento (ex.: transferência bancária/Pix com CNPJ). Por
       // isso guardamos o e-mail digitado aqui e o webhook usa este campo.
       external_reference: email,
+      ...(ref ? { metadata: { ref } } : {}),
       back_urls: {
         success: `${siteUrl}/comprar/sucesso`,
         failure: `${siteUrl}/comprar/erro`,

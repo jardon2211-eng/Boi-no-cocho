@@ -40,6 +40,7 @@ export async function middleware(request: NextRequest) {
     path.startsWith("/definir-senha") ||
     path.startsWith("/esqueci-senha") ||
     path.startsWith("/entrar") ||
+    path.startsWith("/afiliado") ||
     path.startsWith("/api");
 
   // não logado tentando acessar área interna -> manda pro login

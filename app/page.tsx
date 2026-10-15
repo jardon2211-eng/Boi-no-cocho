@@ -19,6 +19,10 @@ const FASES = [
 
 const FAQ = [
   {
+    q: "Tenho uma dúvida ou não recebi o e-mail. Com quem falo?",
+    a: "Chame no WhatsApp: (83) 99124-9968. Respondo para te ajudar com o acesso e com o uso do plano.",
+  },
+  {
     q: "Como recebo o acesso?",
     a: "Depois que o pagamento é confirmado, você recebe um e-mail com o link para criar sua senha. Confira também o spam.",
   },
@@ -503,6 +507,16 @@ function SiteFooter() {
       <Link href="/login" className="font-semibold underline">
         Entrar no aplicativo
       </Link>
+      <br />
+      Dúvidas?{" "}
+      <a
+        href="https://wa.me/5583991249968?text=Ol%C3%A1!%20Tenho%20uma%20d%C3%BAvida%20sobre%20o%20Boi%20no%20Cocho"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold underline"
+      >
+        Fale no WhatsApp (83) 99124-9968
+      </a>
       <br />© 2026 Boi no Cocho
     </footer>
   );

@@ -90,6 +90,17 @@ export default function ComprarPage({
           <Link href="/login" className="font-semibold underline" style={{ color: DARK }}>
             Entrar
           </Link>
+          {" · "}
+          Dúvidas?{" "}
+          <a
+            href="https://wa.me/5583991249968?text=Ol%C3%A1!%20Tenho%20uma%20d%C3%BAvida%20antes%20de%20comprar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold underline"
+            style={{ color: DARK }}
+          >
+            WhatsApp
+          </a>
         </p>
       </div>
     </div>
