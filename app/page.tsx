@@ -57,6 +57,7 @@ export default function HomePage() {
       <Track pagina="home" />
       <SiteHeader />
       <Hero />
+      <VideoSection />
       <DemoSection />
       <ProblemSection />
       <HowSection />
@@ -200,6 +201,44 @@ function FaseResumo({ fase }: { fase: (typeof FASES)[number] }) {
         ))}
       </div>
     </div>
+  );
+}
+
+/* ---------- Vídeo explicativo ---------- */
+
+function VideoSection() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 pt-12 md:px-10 md:pt-16">
+      <div className="mx-auto flex max-w-md flex-col items-center text-center">
+        <h2
+          className="text-[28px] font-extrabold leading-tight md:text-4xl"
+          style={{ color: DARK }}
+        >
+          Veja o app funcionando
+        </h2>
+        <p className="mt-2 text-base md:text-lg" style={{ color: MUTED }}>
+          Em menos de um minuto: cadastre o lote e veja a ração de cada dia.
+        </p>
+        <video
+          className="mt-5 w-full max-w-[340px] rounded-2xl bg-black"
+          style={{ border: `2px solid ${BORDER}`, aspectRatio: "9 / 16" }}
+          controls
+          playsInline
+          preload="none"
+          poster="/videos/explicativo-poster.jpg"
+        >
+          <source src="/videos/explicativo.mp4" type="video/mp4" />
+          Seu navegador não consegue tocar este vídeo.
+        </video>
+        <Link
+          href="/comprar"
+          className="mt-5 flex min-h-[52px] w-full max-w-[340px] items-center justify-center rounded-[10px] px-5 text-lg font-extrabold"
+          style={{ backgroundColor: HAY, color: INK }}
+        >
+          Quero meu plano de adaptação
+        </Link>
+      </div>
+    </section>
   );
 }
 

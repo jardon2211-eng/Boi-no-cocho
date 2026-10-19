@@ -65,6 +65,15 @@ export default function Track({ pagina }: { pagina: "home" | "comprar" | "sucess
       const f = e.target as HTMLFormElement;
       if (f?.querySelector?.('input[name="email"]')) enviar("iniciar_pagamento");
     };
+    // evento "play" não borbulha: escuta na captura. Conta uma vez por visita.
+    let tocou = false;
+    const onPlay = (e: Event) => {
+      if (!tocou && (e.target as HTMLElement | null)?.tagName === "VIDEO") {
+        tocou = true;
+        enviar("video_play");
+      }
+    };
+    document.addEventListener("play", onPlay, true);
     document.addEventListener("click", onClick);
     document.addEventListener("submit", onSubmit, true);
 
@@ -84,6 +93,7 @@ export default function Track({ pagina }: { pagina: "home" | "comprar" | "sucess
     if (pagina === "home") window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
+      document.removeEventListener("play", onPlay, true);
       document.removeEventListener("click", onClick);
       document.removeEventListener("submit", onSubmit, true);
       window.removeEventListener("scroll", onScroll);

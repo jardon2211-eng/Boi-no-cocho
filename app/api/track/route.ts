@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const EVENTOS = new Set([
   "view_home", "view_comprar", "view_sucesso", "view_erro",
-  "click_comprar", "iniciar_pagamento",
+  "click_comprar", "iniciar_pagamento", "video_play",
   "scroll_25", "scroll_50", "scroll_75", "scroll_100",
 ]);
 const BOT = /bot|crawl|spider|preview|facebookexternalhit|vercel|headless|lighthouse|monitor/i;
